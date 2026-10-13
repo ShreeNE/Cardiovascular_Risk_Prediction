@@ -65,11 +65,24 @@ from sklearn.metrics import (
     confusion_matrix
 )
 
+# Ensure project root is in sys.path for running as script from any directory
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+for p in [_PROJECT_ROOT, _SCRIPT_DIR]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
 # Internal preprocessor
-from model.preprocessing import (
-    MedicalDataPreprocessor,
-    TARGET_COLUMNS
-)
+try:
+    from model.preprocessing import (
+        MedicalDataPreprocessor,
+        TARGET_COLUMNS
+    )
+except ModuleNotFoundError:
+    from preprocessing import (
+        MedicalDataPreprocessor,
+        TARGET_COLUMNS
+    )
 
 # Setup logging
 logging.basicConfig(
@@ -111,20 +124,37 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def resolve_path(path: str) -> str:
+    """Resolve path considering current working directory, script directory, and project root."""
+    if os.path.exists(path):
+        return path
+    candidate = os.path.join(_SCRIPT_DIR, path)
+    if os.path.exists(candidate):
+        return candidate
+    candidate_root = os.path.join(_PROJECT_ROOT, path)
+    if os.path.exists(candidate_root):
+        return candidate_root
+    if path.startswith("model/"):
+        candidate_stripped = os.path.join(_SCRIPT_DIR, path[len("model/"):])
+        if os.path.exists(candidate_stripped):
+            return candidate_stripped
+    return path
+
+
 def load_dataset(data_path: str) -> pd.DataFrame:
     """Load dataset from Excel or CSV with path verification."""
-    if not os.path.exists(data_path):
-        # Check CSV fallback
-        csv_fallback = data_path.replace('.xlsx', '.csv')
+    resolved_path = resolve_path(data_path)
+    if not os.path.exists(resolved_path):
+        csv_fallback = resolve_path(data_path.replace('.xlsx', '.csv'))
         if os.path.exists(csv_fallback):
             logger.info(f"Loading CSV dataset fallback from {csv_fallback}")
             return pd.read_csv(csv_fallback)
         raise FileNotFoundError(f"Dataset file not found at: {data_path}")
 
-    logger.info(f"Loading clinical dataset from: {data_path}")
-    if data_path.endswith('.xlsx') or data_path.endswith('.xls'):
-        return pd.read_excel(data_path)
-    return pd.read_csv(data_path)
+    logger.info(f"Loading clinical dataset from: {resolved_path}")
+    if resolved_path.endswith('.xlsx') or resolved_path.endswith('.xls'):
+        return pd.read_excel(resolved_path)
+    return pd.read_csv(resolved_path)
 
 
 def get_base_estimators(random_state: int = 42) -> List[Tuple[str, Any]]:
@@ -397,14 +427,30 @@ def train_production_pipeline(
         ensemble.fit(X_resampled, y_resampled)
         production_models[target] = ensemble
 
-        # Save individual model
+        # 1. Save standard ensemble model (for backward compatibility)
         model_filename = os.path.join(output_dir, f"ensemble_{target}.joblib")
         joblib.dump(ensemble, model_filename, compress=3)
         logger.info(f"Saved {target} ensemble model -> {model_filename}")
 
-        # Fit SHAP TreeExplainer on constituent XGBoost estimator
-        # XGBoost provides fast, exact log-odds attributions
+        # 2. Save platform-agnostic native XGBoost JSON
         xgb_estimator = ensemble.named_estimators_['xgb']
+        xgb_json_filename = os.path.join(output_dir, f"{target.lower()}_xgb.json")
+        xgb_estimator.save_model(xgb_json_filename)
+        logger.info(f"Saved {target} native XGBoost JSON -> {xgb_json_filename}")
+
+        # 3. Save portable scikit-learn components (pure NumPy, cross-platform)
+        sk_data = {
+            'gb': ensemble.named_estimators_['gb'],
+            'rf': ensemble.named_estimators_['rf'],
+            'et': ensemble.named_estimators_['et'],
+            'weights': weights,
+            'classes_': ensemble.classes_
+        }
+        sk_filename = os.path.join(output_dir, f"sklearn_ensemble_{target}.joblib")
+        joblib.dump(sk_data, sk_filename, compress=3)
+        logger.info(f"Saved {target} portable sklearn ensemble -> {sk_filename}")
+
+        # Fit SHAP TreeExplainer on constituent XGBoost estimator
         explainer = shap.TreeExplainer(xgb_estimator)
         production_explainers[target] = explainer
 
@@ -450,9 +496,15 @@ def train_production_pipeline(
 if __name__ == '__main__':
     args = parse_arguments()
     dataset = load_dataset(args.data_path)
+    output_dir = args.output_dir
+    if not os.path.isabs(output_dir):
+        if os.path.basename(os.getcwd()) == "model" and output_dir.startswith("model/"):
+            output_dir = output_dir[len("model/"):]
+        elif os.path.exists(os.path.join(_PROJECT_ROOT, output_dir)):
+            output_dir = os.path.join(_PROJECT_ROOT, output_dir)
     train_production_pipeline(
         df=dataset,
-        output_dir=args.output_dir,
+        output_dir=output_dir,
         n_splits=args.n_splits,
         random_state=args.random_state
     )

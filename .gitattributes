@@ -1,0 +1,5 @@
+# Ensure binary ML model files and spreadsheets are never corrupted by CRLF newline translation
+*.joblib binary
+*.pkl binary
+*.xlsx binary
+*.ico binary

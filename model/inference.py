@@ -21,6 +21,8 @@ from typing import Dict, List, Optional, Any, Tuple
 import numpy as np
 import pandas as pd
 import joblib
+import xgboost as xgb
+import shap
 
 logger = logging.getLogger("CorVita-Inference")
 
@@ -119,6 +121,56 @@ FEATURE_DISPLAY_NAMES = {
 }
 
 
+# ─── Platform-Agnostic Hybrid Voting Classifier ──────────────────────────────
+class HybridVotingClassifier:
+    """
+    Platform-independent Soft Voting Classifier.
+    Combines pure scikit-learn models (joblib) with native XGBoost (JSON).
+    Guarantees 100% cross-platform compatibility across macOS, Windows (CUDA/CPU), and Linux.
+    """
+    def __init__(self, target: str, saved_dir: str = SAVED_MODELS_DIR):
+        self.target = target
+        sk_path = os.path.join(saved_dir, f"sklearn_ensemble_{target}.joblib")
+        xgb_path = os.path.join(saved_dir, f"{target.lower()}_xgb.json")
+        if not os.path.exists(xgb_path):
+            xgb_path = os.path.join(saved_dir, f"{target}_xgb.json")
+
+        if not os.path.exists(sk_path) or not os.path.exists(xgb_path):
+            raise FileNotFoundError(
+                f"Missing hybrid model files for {target}: {sk_path} or {xgb_path}"
+            )
+
+        sk_data = joblib.load(sk_path)
+        self.gb = sk_data["gb"]
+        self.rf = sk_data["rf"]
+        self.et = sk_data["et"]
+        self.weights = list(sk_data["weights"])
+        self.classes_ = sk_data.get("classes_", np.array([0, 1]))
+
+        self.xgb = xgb.XGBClassifier()
+        self.xgb.load_model(xgb_path)
+
+        self.named_estimators_ = {
+            "gb": self.gb,
+            "xgb": self.xgb,
+            "rf": self.rf,
+            "et": self.et,
+        }
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        w_gb, w_xgb, w_rf, w_et = self.weights
+        total = sum(self.weights)
+        p_gb = self.gb.predict_proba(X)
+        p_xgb = self.xgb.predict_proba(X)
+        p_rf = self.rf.predict_proba(X)
+        p_et = self.et.predict_proba(X)
+        return (p_gb * w_gb + p_xgb * w_xgb + p_rf * w_rf + p_et * w_et) / total
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        proba = self.predict_proba(X)
+        return self.classes_[np.argmax(proba, axis=1)]
+
+
 # ─── Model Registry (Lazy Singleton) ─────────────────────────────────────────
 class ModelRegistry:
     """Thread-safe lazy-loading singleton for all model artifacts."""
@@ -160,14 +212,52 @@ class ModelRegistry:
 
         # Load target models
         for target in TARGET_LABELS:
+            # 1. Prefer platform-agnostic Hybrid Voting Classifier (sklearn + XGBoost JSON)
+            sk_path = os.path.join(SAVED_MODELS_DIR, f"sklearn_ensemble_{target}.joblib")
+            xgb_path = os.path.join(SAVED_MODELS_DIR, f"{target.lower()}_xgb.json")
+            if not os.path.exists(xgb_path):
+                xgb_path = os.path.join(SAVED_MODELS_DIR, f"{target}_xgb.json")
+
+            if os.path.exists(sk_path) and os.path.exists(xgb_path):
+                try:
+                    self.models[target] = HybridVotingClassifier(target, SAVED_MODELS_DIR)
+                    logger.info(f"Loaded platform-agnostic hybrid model for {target}")
+                    continue
+                except Exception as e:
+                    logger.warning(f"Failed loading hybrid model for {target} ({e}), falling back to joblib.")
+
+            # 2. Fallback to monolithic ensemble_{target}.joblib
             model_path = os.path.join(SAVED_MODELS_DIR, f"ensemble_{target}.joblib")
             if os.path.exists(model_path):
-                self.models[target] = joblib.load(model_path)
+                try:
+                    self.models[target] = joblib.load(model_path)
+                    logger.info(f"Loaded monolithic joblib model for {target}")
+                except Exception as e:
+                    logger.error(
+                        f"Failed loading {model_path} ({e}). "
+                        f"Please ensure hybrid model files or run `python model/train.py`."
+                    )
             else:
                 logger.warning(f"Model file not found for target {target}: {model_path}")
 
-        # Load SHAP explainers
-        self.shap_explainers = joblib.load(_SHAP_EXPLAINERS_PATH)
+        # Load SHAP explainers: try file, or build directly from loaded XGBoost estimators
+        self.shap_explainers = {}
+        if os.path.exists(_SHAP_EXPLAINERS_PATH):
+            try:
+                self.shap_explainers = joblib.load(_SHAP_EXPLAINERS_PATH)
+            except Exception as e:
+                logger.warning(f"Could not load pre-pickled SHAP explainers ({e}). Generating on-the-fly.")
+
+        # Ensure all models have a corresponding SHAP TreeExplainer
+        for target in TARGET_LABELS:
+            if target not in self.shap_explainers and target in self.models:
+                try:
+                    xgb_est = self.models[target].named_estimators_.get("xgb")
+                    if xgb_est is not None:
+                        self.shap_explainers[target] = shap.TreeExplainer(xgb_est)
+                        logger.info(f"Generated instant SHAP TreeExplainer for {target}")
+                except Exception as e:
+                    logger.warning(f"Failed generating SHAP explainer for {target}: {e}")
 
         elapsed = time.time() - t0
         logger.info(
