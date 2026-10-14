@@ -21,6 +21,7 @@ done
 
 # 3. Start Next.js frontend binding to 0.0.0.0 on Render's external PORT
 PORT_NUMBER="${PORT:-10000}"
+export NODE_OPTIONS="--max-old-space-size=160"
 echo "[2/2] Starting Next.js frontend on 0.0.0.0:${PORT_NUMBER}..."
 cd /app/frontend
-exec npm run start -- -p "${PORT_NUMBER}" -H 0.0.0.0
+exec ./node_modules/.bin/next start -p "${PORT_NUMBER}" -H 0.0.0.0
