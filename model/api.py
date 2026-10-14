@@ -28,8 +28,13 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_HERE)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 
-from model.inference import run_inference, get_registry, FEATURE_DISPLAY_NAMES
+try:
+    from model.inference import run_inference, get_registry, FEATURE_DISPLAY_NAMES
+except ImportError:
+    from inference import run_inference, get_registry, FEATURE_DISPLAY_NAMES
 
 # ─── Logging Setup ─────────────────────────────────────────────────────────────
 logging.basicConfig(

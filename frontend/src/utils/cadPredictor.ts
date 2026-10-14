@@ -10,7 +10,43 @@
 
 import { PatientClinicalData, PredictionResult } from '../types/medical';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+/**
+ * Resolves the backend endpoint URL.
+ *
+ * In Vercel multi-service deployment:
+ * - Server functions communicate with the internal `model` service via
+ *   the Vercel service binding injected into `process.env.MODEL_URL`.
+ * - Browser/client-side code calls the same-origin Next.js API route `/api/*`,
+ *   which proxies requests to `process.env.MODEL_URL`.
+ * - Local standalone development falls back to `http://localhost:8000`.
+ */
+export function getApiEndpoint(path: string): string | URL {
+  const cleanPath = path.replace(/^\//, '');
+
+  // 1. Direct server-to-service internal binding (Vercel functions runtime)
+  if (typeof window === 'undefined' && process.env.MODEL_URL) {
+    const baseUrl = process.env.MODEL_URL.endsWith('/')
+      ? process.env.MODEL_URL
+      : `${process.env.MODEL_URL}/`;
+    return new URL(cleanPath, baseUrl);
+  }
+
+  // 2. Explicit public URL override if configured
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL.endsWith('/')
+      ? process.env.NEXT_PUBLIC_API_URL
+      : `${process.env.NEXT_PUBLIC_API_URL}/`;
+    return new URL(cleanPath, baseUrl);
+  }
+
+  // 3. Client-side browser execution (routed through Next.js proxy route)
+  if (typeof window !== 'undefined') {
+    return `/api/${cleanPath}`;
+  }
+
+  // 4. Standalone development fallback
+  return new URL(cleanPath, 'http://localhost:8000/');
+}
 
 // ── API Response Types ────────────────────────────────────────────────────────
 interface SHAPAttribution {
@@ -254,7 +290,8 @@ export async function runCadMLInference(patient: PatientClinicalData): Promise<P
   const payload = buildApiPayload(patient);
 
   try {
-    const response = await fetch(`${API_BASE}/predict`, {
+    const endpoint = getApiEndpoint('predict');
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -285,7 +322,8 @@ export function runCadPredictiveSimulation(patient: PatientClinicalData): Predic
 /** Checks if the FastAPI backend is reachable */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const resp = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    const endpoint = getApiEndpoint('health');
+    const resp = await fetch(endpoint, { signal: AbortSignal.timeout(3000) });
     return resp.ok;
   } catch {
     return false;
