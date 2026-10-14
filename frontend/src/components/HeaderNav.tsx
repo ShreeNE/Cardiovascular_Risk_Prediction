@@ -54,9 +54,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ onOpenDisclaimer }) => {
         <button
           type="button"
           onClick={onOpenDisclaimer}
-          className="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-amber-950/60 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition-all font-mono text-xs flex items-center gap-2 cursor-pointer shadow-sm group"
+          className="btn-corvita btn-sm flex items-center gap-2 cursor-pointer group"
         >
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+          <ShieldAlert className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform" />
           <span className="hidden sm:inline">Medical Disclaimer</span>
           <span className="sm:hidden">Notice</span>
         </button>

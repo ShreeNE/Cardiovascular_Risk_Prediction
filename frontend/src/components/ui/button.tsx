@@ -3,21 +3,21 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#F04452] disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
   {
     variants: {
       variant: {
         default:
-          'bg-amber-500/20 text-amber-200 border border-amber-500/50 hover:bg-amber-500/30 hover:border-amber-400',
+          'btn-corvita',
         rpg:
-          'bg-gradient-to-r from-amber-600/30 via-amber-500/30 to-amber-600/30 text-amber-100 border border-amber-400/60 hover:border-amber-300 hover:text-white shadow-[0_0_15px_rgba(251,191,36,0.15)] font-serif tracking-widest uppercase',
+          'btn-corvita font-serif tracking-widest uppercase',
         secondary:
-          'bg-slate-900/80 text-slate-300 border border-slate-800 hover:bg-slate-800 hover:text-slate-100',
+          'btn-corvita-ghost',
         outline:
-          'border border-slate-800 bg-transparent hover:bg-slate-900 hover:text-slate-100',
+          'btn-corvita-ghost',
         ghost:
-          'hover:bg-slate-800/60 hover:text-slate-100 text-slate-400',
-        link: 'text-amber-400 underline-offset-4 hover:underline',
+          'hover:bg-[rgba(255,83,107,0.15)] text-[#A3B5C9] hover:text-[#F1F5FA]',
+        link: 'text-[#FF536B] underline-offset-4 hover:underline hover:text-[#FF6B82]',
       },
       size: {
         default: 'h-9 px-4 py-2',

@@ -56,7 +56,7 @@ export default function Home() {
           particleCount: 50,
           spread: 60,
           origin: { y: 0.6 },
-          colors: ['#f59e0b', '#fbbf24', '#d97706'],
+          colors: ['#F04452', '#FF5964', '#651E2B'],
         });
       }
     } catch (err) {
@@ -134,9 +134,11 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#080B10] text-slate-100 font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden">
-      {/* Hogwarts Legacy Subtle Radial Vignette Background */}
-      <div className="fixed inset-0 rpg-vignette pointer-events-none z-0" />
+    <div className="relative min-h-screen w-full flex flex-col bg-[#04070D] text-[#F1F5FA] font-sans selection:bg-[#FF334F]/30 selection:text-white overflow-x-hidden">
+      {/* Subtle Cardiovascular Radial Vignette Background & Ambient Glows */}
+      <div className="fixed inset-0 cardio-vignette pointer-events-none z-0" />
+      <div className="fixed -bottom-48 -right-48 w-96 h-96 rounded-full bg-[#FF334F]/5 blur-3xl pointer-events-none z-0" />
+      <div className="fixed -top-48 -left-48 w-96 h-96 rounded-full bg-[#83DDF3]/5 blur-3xl pointer-events-none z-0" />
 
       {/* Mandatory Disclaimer Modal Overlay (Step 1) */}
       <DisclaimerModal
@@ -144,7 +146,7 @@ export default function Home() {
         onAccept={handleAcceptDisclaimer}
       />
 
-      {/* Top Header & Hogwarts Legacy Category Bar */}
+      {/* Top Header & Category Bar */}
       <HogwartsHeaderNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -158,9 +160,9 @@ export default function Home() {
       />
 
       {/* Main Split Layout: Floating Left Panel (~38%) and Open 3D Canvas (~62%) */}
-      <main className="relative z-10 flex-1 w-full max-w-[1920px] mx-auto p-4 sm:p-6 flex flex-col lg:flex-row gap-5 items-stretch overflow-hidden">
+      <main className="relative z-10 flex-1 w-full max-w-[1920px] mx-auto p-3 sm:p-5 flex flex-col lg:flex-row gap-4 sm:gap-5 items-stretch min-h-0">
         {/* LEFT FLOATING PANEL: parameter inputs OR prediction results */}
-        <section className="w-full lg:w-[38%] xl:w-[36%] flex flex-col h-[650px] lg:h-[calc(100vh-140px)] min-h-[580px]">
+        <section className="w-full lg:w-[38%] xl:w-[36%] flex flex-col h-[680px] lg:h-[calc(100vh-110px)] min-h-[580px]">
           {prediction && !isSimulating ? (
             <PredictionInlinePanel
               prediction={prediction}
@@ -181,7 +183,7 @@ export default function Home() {
         </section>
 
         {/* RIGHT OPEN CANVAS (Width: ~62%): 3D Viewer & Hemodynamic Perfusion */}
-        <section className="w-full lg:w-[62%] xl:w-[64%] flex flex-col h-[650px] lg:h-[calc(100vh-140px)] min-h-[580px]">
+        <section className="w-full lg:w-[62%] xl:w-[64%] flex flex-col h-[680px] lg:h-[calc(100vh-110px)] min-h-[580px]">
           <HeartCanvas3D
             patient={patient}
             prediction={prediction}
@@ -189,17 +191,6 @@ export default function Home() {
           />
         </section>
       </main>
-
-      {/* Bottom footer – disclaimer link only, no run/reset buttons */}
-      <footer className="w-full border-t border-amber-500/10 bg-[#080B10]/95 px-6 py-2.5 flex items-center justify-between text-xs font-mono text-slate-400 z-30 select-none">
-        <button
-          onClick={() => setShowDisclaimer(true)}
-          className="text-[11px] text-slate-400 hover:text-amber-300 transition-colors underline-offset-4 hover:underline cursor-pointer font-sans"
-        >
-          Medical Disclaimer &amp; Protocol Notice
-        </button>
-        <span className="text-[10px] text-slate-500 font-sans">Educational Demonstration Only</span>
-      </footer>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
           {/* Backdrop */}
           <div
             onClick={onClose}
-            className="fixed inset-0 bg-[#080B10]/85 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 bg-[#04070D]/80 backdrop-blur-xl cursor-pointer"
           />
 
           {/* Modal Card */}
@@ -41,37 +41,38 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
             initial={{ scale: 0.94, opacity: 0, y: 15 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 15 }}
-            className="relative w-full max-w-2xl bg-[#0B0F17] border border-amber-500/30 rounded-xl p-6 sm:p-7 shadow-2xl text-slate-100 max-h-[88vh] overflow-y-auto scrollbar-thin scrollbar-thumb-amber-500/20"
+            className="relative w-full max-w-2xl bg-[rgba(15,27,42,0.88)] border border-[rgba(174,198,225,0.22)] rounded-2xl p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-2xl text-[#F1F5FA] max-h-[88vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#4A1425]/50"
           >
-            {/* Top gold accent rule */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/80 to-transparent" />
+            {/* Top crimson accent rule */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF334F]/90 to-transparent" />
 
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 h-7 w-7 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="absolute top-4 right-4 btn-corvita btn-icon !h-8 !w-8 flex items-center justify-center text-white cursor-pointer"
+              title="Close Report"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
 
             {/* Header */}
             <div className="flex items-center gap-4 mb-5">
               <div
-                className={`h-12 w-12 rounded-lg flex items-center justify-center border font-mono font-bold text-lg ${
+                className={`h-12 w-12 rounded-xl flex items-center justify-center border font-mono font-bold text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] ${
                   isHighRisk
-                    ? 'bg-rose-950/40 border-rose-500/60 text-rose-300'
-                    : 'bg-amber-950/30 border-amber-500/50 text-amber-200'
+                    ? 'glass-crimson-selected text-[#FF334F]'
+                    : 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
                 }`}
               >
                 {prediction.overallRiskScore}%
               </div>
               <div>
-                <span className="font-serif tracking-widest text-[10px] uppercase text-amber-200/70 block">
+                <span className="font-mono tracking-widest text-[10px] uppercase text-[#FF334F] font-bold block">
                   Simulation Output
                 </span>
-                <h2 className="text-lg font-serif font-semibold text-white">
+                <h2 className="text-lg font-serif font-bold text-white">
                   CAD Risk Category: {prediction.riskCategory}
                 </h2>
-                <p className="text-[11px] text-slate-400 font-sans">
+                <p className="text-[11px] text-[#A3B5C9] font-sans">
                   Cath Outcome Probability: {prediction.cathDiagnosis} ({prediction.predictedVessels} vessels involved)
                 </p>
               </div>
@@ -79,29 +80,29 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
 
             {/* Vessel Perfusion Summary */}
             <div className="grid grid-cols-3 gap-2.5 mb-5">
-              <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                <span className="text-[10px] font-serif uppercase tracking-wider text-slate-400 block mb-0.5">
+              <div className="p-3 rounded-xl glass-card">
+                <span className="text-[10px] font-serif uppercase tracking-wider text-[#A3B5C9] block mb-0.5">
                   LAD Territory
                 </span>
-                <div className="text-sm font-semibold font-mono text-amber-300">
+                <div className="text-sm font-semibold font-mono text-[#FF334F]">
                   {prediction.ladStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                <span className="text-[10px] font-serif uppercase tracking-wider text-slate-400 block mb-0.5">
+              <div className="p-3 rounded-xl glass-card">
+                <span className="text-[10px] font-serif uppercase tracking-wider text-[#A3B5C9] block mb-0.5">
                   LCX Territory
                 </span>
-                <div className="text-sm font-semibold font-mono text-amber-300">
+                <div className="text-sm font-semibold font-mono text-[#FF334F]">
                   {prediction.lcxStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                <span className="text-[10px] font-serif uppercase tracking-wider text-slate-400 block mb-0.5">
+              <div className="p-3 rounded-xl glass-card">
+                <span className="text-[10px] font-serif uppercase tracking-wider text-[#A3B5C9] block mb-0.5">
                   RCA Territory
                 </span>
-                <div className="text-sm font-semibold font-mono text-amber-300">
+                <div className="text-sm font-semibold font-mono text-[#FF334F]">
                   {prediction.rcaStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
@@ -110,10 +111,10 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
             {/* Key Clinical Risk Contributors */}
             <div className="mb-5 space-y-2">
               <div className="space-y-1">
-                <h3 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+                <h3 className="font-serif tracking-widest text-xs uppercase text-[#F1F5FA] font-bold">
                   Primary Clinical Risk Drivers
                 </h3>
-                <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+                <div className="h-[1px] w-full bg-gradient-to-r from-[#FF334F]/40 via-[#4A1425]/30 to-transparent" />
               </div>
 
               <div className="space-y-1.5 pt-1">
@@ -121,20 +122,20 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
                   prediction.keyRiskFactors.map((rf, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-md bg-slate-900/30 border border-slate-800 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-xl glass-card flex items-center justify-between text-xs"
                     >
                       <div>
-                        <span className="font-medium text-slate-200">{rf.name}:</span>{' '}
-                        <span className="text-amber-200 font-mono">{rf.value}</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{rf.impact}</p>
+                        <span className="font-semibold text-[#F1F5FA]">{rf.name}:</span>{' '}
+                        <span className="text-[#FF334F] font-mono">{rf.value}</span>
+                        <p className="text-[10px] text-[#A3B5C9] mt-0.5">{rf.impact}</p>
                       </div>
                       <span
                         className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-medium ${
                           rf.severity === 'critical'
-                            ? 'text-rose-300 bg-rose-950/40 border border-rose-500/40'
+                            ? 'text-[#FF334F] glass-crimson-selected'
                             : rf.severity === 'high'
-                            ? 'text-amber-300 bg-amber-950/40 border border-amber-500/40'
-                            : 'text-slate-400 bg-slate-800'
+                            ? 'text-orange-300 bg-orange-950/40 border border-orange-500/40'
+                            : 'text-[#A3B5C9] bg-[rgba(4,8,15,0.7)]'
                         }`}
                       >
                         {rf.severity}
@@ -142,7 +143,7 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400 py-1">No significant pathological risk markers detected.</p>
+                  <p className="text-xs text-[#A3B5C9] py-1">No significant pathological risk markers detected.</p>
                 )}
               </div>
             </div>
@@ -151,18 +152,18 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
             {prediction.protectiveFactors.length > 0 && (
               <div className="mb-5 space-y-2">
                 <div className="space-y-1">
-                  <h3 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+                  <h3 className="font-serif tracking-widest text-xs uppercase text-[#F1F5FA] font-bold">
                     Favorable Parameters
                   </h3>
-                  <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+                  <div className="h-[1px] w-full bg-gradient-to-r from-[#FF334F]/40 via-[#4A1425]/30 to-transparent" />
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {prediction.protectiveFactors.map((pf, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-1.5"
+                      className="px-2.5 py-1 rounded-lg glass-card text-[11px] text-[#F1F5FA] flex items-center gap-1.5"
                     >
-                      <CheckCircle2 className="w-3 h-3 text-amber-400" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       {pf}
                     </span>
                   ))}
@@ -171,10 +172,14 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
             )}
 
             {/* Close button */}
-            <div className="pt-3 border-t border-slate-800 flex justify-end">
-              <Button variant="secondary" size="sm" onClick={onClose} className="text-xs">
+            <div className="pt-3 border-t border-[rgba(174,198,225,0.18)] flex justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-corvita btn-sm px-5 py-2 text-xs font-serif tracking-wider uppercase font-semibold cursor-pointer"
+              >
                 Close Report
-              </Button>
+              </button>
             </div>
           </motion.div>
         </motion.div>

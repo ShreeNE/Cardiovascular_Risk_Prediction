@@ -62,7 +62,7 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
   return (
     <div
       className={cn(
-        'group relative rounded-lg border border-slate-800/80 bg-slate-900/40 p-2.5 transition-colors hover:border-slate-700/90',
+        'group relative rounded-xl border border-[rgba(174,198,225,0.18)] bg-[rgba(24,39,56,0.58)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.14)] hover:border-[rgba(174,198,225,0.32)] hover:shadow-[0_10px_28px_-4px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.22)]',
         className
       )}
     >
@@ -70,7 +70,7 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
         <div className="flex items-center gap-1.5">
           <label
             htmlFor={id}
-            className="text-[11px] font-medium uppercase tracking-wider text-slate-300 font-sans"
+            className="text-[11px] font-medium text-[#F1F5FA] font-sans"
           >
             {label}
           </label>
@@ -81,19 +81,19 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
                 onClick={() => setShowTooltip(!showTooltip)}
-                className="text-slate-500 hover:text-amber-300 transition-colors cursor-pointer"
+                className="text-[#A3B5C9] hover:text-[#FF334F] transition-colors cursor-pointer"
                 title="Clinical Definition"
               >
                 <Info className="w-3 h-3" />
               </button>
 
               {showTooltip && (
-                <div className="absolute left-0 bottom-5 z-50 w-64 rounded-md border border-amber-500/30 bg-[#0B0F17]/95 p-2.5 shadow-xl backdrop-blur-md text-[11px] text-slate-200 pointer-events-none font-sans">
-                  <div className="font-semibold text-amber-200 font-serif mb-0.5">{termInfo.name}</div>
-                  <div className="text-[10px] text-slate-400 mb-1 leading-relaxed">{termInfo.definition}</div>
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[9px] font-mono">
-                    <span className="text-slate-500">Normal Range:</span>
-                    <span className="text-amber-300">{termInfo.normalRange}</span>
+                <div className="absolute left-0 bottom-5 z-50 w-64 rounded-xl border border-[rgba(255,51,79,0.4)] bg-[rgba(15,27,42,0.92)] backdrop-blur-xl p-3 shadow-2xl text-[11px] text-[#F1F5FA] pointer-events-none font-sans">
+                  <div className="font-semibold text-[#FF334F] font-serif mb-0.5">{termInfo.name}</div>
+                  <div className="text-[10px] text-[#A3B5C9] mb-1.5 leading-relaxed">{termInfo.definition}</div>
+                  <div className="flex items-center justify-between pt-1 border-t border-[rgba(174,198,225,0.18)] text-[9px] font-mono">
+                    <span className="text-[#A3B5C9]">Normal Range:</span>
+                    <span className="text-[#83DDF3]">{termInfo.normalRange}</span>
                   </div>
                 </div>
               )}
@@ -104,10 +104,10 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
         {normalMin !== undefined && normalMax !== undefined && (
           <span
             className={cn(
-              'text-[10px] font-mono px-1.5 py-0.2 rounded',
+              'text-[10px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap',
               isAbnormal
-                ? 'text-amber-400 bg-amber-950/40 border border-amber-500/30'
-                : 'text-slate-500'
+                ? 'text-[#FF334F] bg-[#FF334F]/10 border border-[#FF334F]/30 shadow-[0_0_8px_rgba(255,51,79,0.25)]'
+                : 'text-[#A3B5C9]'
             )}
           >
             Ref: {normalMin}–{normalMax} {unit}
@@ -115,19 +115,19 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
         )}
       </div>
 
-      {/* Input row with steppers and unit */}
+      {/* Input row with inset glass steppers and unit */}
       <div className="relative flex items-center gap-1">
         <button
           type="button"
           onClick={handleDecrement}
           aria-label={`Decrease ${label}`}
-          className="h-8 w-8 rounded border border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+          className="btn-corvita-stepper"
         >
           <Minus className="w-3.5 h-3.5" />
         </button>
 
-        <div className="relative flex-1">
-          <Input
+        <div className="relative flex-1 h-8 bg-[rgba(4,8,15,0.82)] border border-[rgba(174,198,225,0.14)] rounded-lg flex items-center justify-center gap-1.5 px-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] focus-within:border-[rgba(255,51,79,0.5)] focus-within:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_0_10px_rgba(255,51,79,0.25)] transition-all">
+          <input
             id={id}
             type="number"
             step={step}
@@ -135,10 +135,10 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
             max={max}
             value={value || ''}
             onChange={handleInputChange}
-            className="h-8 pr-12 text-center text-xs font-mono bg-slate-950/70 border-slate-800 text-slate-100 focus:border-amber-500/60 focus:ring-amber-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-14 text-center text-xs font-mono font-bold bg-transparent border-none text-[#F1F5FA] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           {unit && (
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-500 pointer-events-none select-none">
+            <span className="text-[10px] font-mono text-[#A3B5C9] pointer-events-none select-none">
               {unit}
             </span>
           )}
@@ -148,7 +148,7 @@ export const ClinicalStepperInput: React.FC<ClinicalStepperInputProps> = ({
           type="button"
           onClick={handleIncrement}
           aria-label={`Increase ${label}`}
-          className="h-8 w-8 rounded border border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+          className="btn-corvita-stepper"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>

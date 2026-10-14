@@ -1,13 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Play, Sparkles } from 'lucide-react';
+import { Play, ClipboardList, User, Scale, Ruler, Info, Calculator, ChevronDown, ChevronRight, Dna, ShieldAlert } from 'lucide-react';
 import { PatientClinicalData } from '@/types/medical';
 import { ClinicalStepperInput } from './ui/clinical-stepper-input';
 import { RpgOrnamentSlider } from './ui/rpg-ornament-slider';
 import { SegmentedToggle } from './ui/segmented-toggle';
 import { MainCategoryTab } from './HogwartsHeaderNav';
-import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
+import { medicalDictionary } from '@/data/medicalDictionary';
 
 interface CleanParameterPanelProps {
   patient: PatientClinicalData;
@@ -24,6 +25,8 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
   onRunSimulation,
   isSimulating,
 }) => {
+  const [bmiTooltip, setBmiTooltip] = React.useState(false);
+
   // Generic field updater
   const updateField = <K extends keyof PatientClinicalData>(
     field: K,
@@ -44,23 +47,60 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
     });
   };
 
+  // BMI status category helper
+  const getBmiStatus = (bmi: number) => {
+    if (bmi < 18.5) return { label: 'Underweight', color: 'text-sky-400', dot: 'bg-sky-400' };
+    if (bmi < 25) return { label: 'Normal', color: 'text-emerald-400', dot: 'bg-emerald-400' };
+    if (bmi < 30) return { label: 'Overweight', color: 'text-[#F12F4B]', dot: 'bg-[#F12F4B]' };
+    return { label: 'Obese', color: 'text-rose-400', dot: 'bg-rose-400' };
+  };
+
+  const bmiStatus = getBmiStatus(patient.bmi);
+
   return (
-    <div className="w-full h-full flex flex-col bg-[#0B0F17]/85 rounded-xl border border-slate-800/80 shadow-2xl backdrop-blur-md overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-[rgba(12,19,35,0.88)] backdrop-blur-2xl rounded-2xl border border-[rgba(145,173,221,0.28)] shadow-[0_20px_50px_rgba(0,0,0,0.75),0_0_30px_rgba(155,77,255,0.08),inset_0_1px_0_rgba(255,255,255,0.22)] overflow-hidden select-none">
+      {/* ── Panel Header ─────────────────────────────────────────────────── */}
+      <div className="px-5 py-3.5 border-b border-[rgba(145,173,221,0.22)] bg-[rgba(25,38,62,0.50)] backdrop-blur-md flex items-center justify-between shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl border border-[rgba(255,83,107,0.75)] bg-gradient-to-br from-[#FF536B] via-[#FF3158] to-[#C41838] flex items-center justify-center text-white shadow-[0_0_18px_rgba(255,49,88,0.55),inset_0_1px_0_rgba(255,255,255,0.45)] shrink-0">
+            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="12" cy="10" r="3" />
+              <path d="M7 17c0-2 2.2-3 5-3s5 1 5 3" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="font-sans tracking-wider text-xs uppercase font-extrabold text-[#F4F6FF] drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+              {activeTab === 'demographics' && 'PATIENT DEMOGRAPHICS'}
+              {activeTab === 'vitals' && 'VITALS & SYMPTOMS'}
+              {activeTab === 'labs' && 'LAB & BIOMARKERS'}
+              {activeTab === 'ecg' && 'ECG & ECHO FINDINGS'}
+            </h2>
+            <p className="text-[10px] text-[#A9BED8] font-sans">
+              {activeTab === 'demographics' && 'Enter clinical details to assess cardiovascular risk'}
+              {activeTab === 'vitals' && 'Hemodynamic stability and symptomatic angina'}
+              {activeTab === 'labs' && 'Metabolic panel, lipid profile, and biomarkers'}
+              {activeTab === 'ecg' && 'Electrocardiogram and echocardiographic criteria'}
+            </p>
+          </div>
+        </div>
+
+        {/* Faint Red ECG Wave graphic */}
+        <div className="hidden sm:block pointer-events-none opacity-50">
+          <svg className="w-24 h-6 text-[#FF3158]" viewBox="0 0 100 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <path d="M0 12h35l4-7 5 14 6-18 5 21 4-10h41" />
+          </svg>
+        </div>
+      </div>
+
       {/* Scrollable Clinical Inputs Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5 space-y-4 scrollbar-thin scrollbar-thumb-[#471328]/70 scrollbar-track-transparent">
         {/* ============================================================== */}
         {/* TAB 1: DEMOGRAPHICS                                           */}
         {/* ============================================================== */}
         {activeTab === 'demographics' && (
           <div className="space-y-4">
-            {/* Section Header with Hogwarts Legacy Gold Rule */}
-            <div className="space-y-1">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
-                Patient Demographics
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
-            </div>
-
+            {/* Row 1: Age & Biological Sex */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <ClinicalStepperInput
                 id="age"
@@ -74,74 +114,238 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
                 onChange={(v) => updateField('age', v)}
               />
 
-              <SegmentedToggle
-                id="sex"
-                label="Biological Sex"
-                value={patient.sex}
-                options={[
-                  { label: 'Male', value: 'Male' },
-                  { label: 'Female', value: 'Female' },
-                ]}
-                onChange={(v) => updateField('sex', v as 'Male' | 'Female')}
-              />
+              <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Dna className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
+                    <span className="text-[11px] font-medium text-[#F4F6FF] font-sans">
+                      Biological Sex
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => updateField('sex', 'Male')}
+                    className={cn(
+                      'h-8 rounded-lg border px-2.5 text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer select-none',
+                      patient.sex === 'Male'
+                        ? 'btn-corvita-selected font-semibold text-white'
+                        : 'btn-corvita-ghost text-[#A9BED8]'
+                    )}
+                  >
+                    <span>♂</span>
+                    <span>Male</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateField('sex', 'Female')}
+                    className={cn(
+                      'h-8 rounded-lg border px-2.5 text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer select-none',
+                      patient.sex === 'Female'
+                        ? 'btn-corvita-selected font-semibold text-white'
+                        : 'btn-corvita-ghost text-[#A9BED8]'
+                    )}
+                  >
+                    <span>♀</span>
+                    <span>Female</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Anthropometrics Section */}
-            <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
-                Anthropometrics & Body Composition
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
-            </div>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#FF3158]/20 border border-[#FF3158]/60 flex items-center justify-center text-[#FF3158] shadow-[0_0_8px_rgba(255,49,88,0.4)]">
+                    <User className="w-3 h-3" />
+                  </div>
+                  <h3 className="font-sans tracking-wider text-[11px] uppercase font-bold text-[#F4F6FF]">
+                    Anthropometrics & Body Composition
+                  </h3>
+                </div>
+                <ChevronDown className="w-4 h-4 text-[#A9BED8]" />
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <ClinicalStepperInput
-                id="weight"
-                label="Body Weight"
-                value={patient.weight}
-                min={40}
-                max={160}
-                unit="kg"
-                normalMin={50}
-                normalMax={85}
-                onChange={(v) => updateField('weight', v)}
-              />
+              {/* Weight & Height */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Weight Card with Scale Icon */}
+                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
+                      <span className="text-[11px] font-medium text-[#F4F6FF] font-sans">
+                        Body Weight
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#A9BED8]">
+                      Ref: 50–85 kg
+                    </span>
+                  </div>
+                  <div className="relative flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => updateField('weight', Math.max(40, patient.weight - 1))}
+                      aria-label="Decrease Body Weight"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 h-8 bg-[rgba(3,9,20,0.94)] border border-[rgba(145,173,221,0.20)] rounded-lg flex items-center justify-center gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
+                      <span className="text-xs font-mono font-bold text-[#F4F6FF]">{patient.weight}</span>
+                      <span className="text-[10px] font-mono text-[#A9BED8]">kg</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateField('weight', Math.min(160, patient.weight + 1))}
+                      aria-label="Increase Body Weight"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
 
-              <ClinicalStepperInput
-                id="length"
-                label="Height / Length"
-                value={patient.length}
-                min={130}
-                max={200}
-                unit="cm"
-                onChange={(v) => updateField('length', v)}
-              />
-            </div>
+                {/* Height Card with Ruler Icon */}
+                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Ruler className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
+                      <span className="text-[11px] font-medium text-[#F4F6FF] font-sans">
+                        Height / Length
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#A9BED8]">
+                      Ref: 150–190 cm
+                    </span>
+                  </div>
+                  <div className="relative flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => updateField('length', Math.max(130, patient.length - 1))}
+                      aria-label="Decrease Height"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 h-8 bg-[rgba(3,9,20,0.94)] border border-[rgba(145,173,221,0.20)] rounded-lg flex items-center justify-center gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
+                      <span className="text-xs font-mono font-bold text-[#F4F6FF]">{patient.length}</span>
+                      <span className="text-[10px] font-mono text-[#A9BED8]">cm</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateField('length', Math.min(200, patient.length + 1))}
+                      aria-label="Increase Height"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <ClinicalStepperInput
-                id="bmi"
-                label="Body Mass Index (BMI)"
-                value={patient.bmi}
-                min={15}
-                max={50}
-                step={0.1}
-                unit="kg/m²"
-                normalMin={18.5}
-                normalMax={24.9}
-                onChange={(v) => updateField('bmi', v)}
-              />
+              {/* BMI and Clinical Obesity */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* BMI Card */}
+                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Calculator className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
+                      <span className="text-[11px] font-medium text-[#F4F6FF] font-sans">
+                        Body Mass Index (BMI)
+                      </span>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onMouseEnter={() => setBmiTooltip(true)}
+                          onMouseLeave={() => setBmiTooltip(false)}
+                          onClick={() => setBmiTooltip(!bmiTooltip)}
+                          className="text-[#A9BED8] hover:text-[#FF3158] transition-colors cursor-pointer"
+                        >
+                          <Info className="w-3 h-3" />
+                        </button>
+                        {bmiTooltip && (
+                          <div className="absolute left-0 bottom-5 z-50 w-56 rounded-xl border border-[rgba(255,49,88,0.5)] bg-[rgba(12,19,35,0.95)] backdrop-blur-xl p-2.5 shadow-2xl text-[10px] text-[#F4F6FF] pointer-events-none font-sans">
+                            <div className="font-semibold text-[#FF3158] font-serif mb-0.5">Body Mass Index</div>
+                            <div className="text-[#A9BED8]">Weight (kg) divided by height squared (m²). Standard index for adiposity.</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-mono text-[#FF3158] bg-[#FF3158]/10 border border-[#FF3158]/40 px-2 py-0.5 rounded-lg text-right leading-tight shadow-[0_0_8px_rgba(255,49,88,0.25)]">
+                      Ref: 18.5 – 24.9<br />kg/m²
+                    </span>
+                  </div>
 
-              <SegmentedToggle
-                id="obesity"
-                label="Clinical Obesity"
-                value={patient.obesity}
-                options={[
-                  { label: 'Non-Obese', value: 'N' },
-                  { label: 'Obese (BMI ≥30)', value: 'Y' },
-                ]}
-                onChange={(v) => updateField('obesity', v as 'Y' | 'N')}
-              />
+                  <div className="relative flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => updateField('bmi', Number((Math.max(15, patient.bmi - 0.2)).toFixed(2)))}
+                      aria-label="Decrease BMI"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 h-8 bg-[rgba(3,9,20,0.94)] border border-[rgba(145,173,221,0.20)] rounded-lg flex items-center justify-center gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
+                      <span className="text-xs font-mono font-bold text-[#F4F6FF]">{patient.bmi.toFixed(1)}</span>
+                      <span className="text-[10px] font-mono text-[#A9BED8]">kg/m²</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateField('bmi', Number((Math.min(50, patient.bmi + 0.2)).toFixed(2)))}
+                      aria-label="Increase BMI"
+                      className="btn-corvita-stepper font-mono text-sm font-bold"
+                    >
+                      +
+                    </button>
+                    <div className="flex items-center gap-1 pl-1 shrink-0">
+                      <span className={cn('w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] animate-pulse', bmiStatus.dot)} />
+                      <span className={cn('text-[10px] font-sans font-medium', bmiStatus.color)}>
+                        {bmiStatus.label}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clinical Obesity */}
+                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
+                      <span className="text-[11px] font-medium text-[#F4F6FF] font-sans">
+                        Clinical Obesity
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => updateField('obesity', 'N')}
+                      className={cn(
+                        'h-8 rounded-lg border px-2 text-xs font-medium transition-all duration-150 flex items-center justify-center cursor-pointer select-none',
+                        patient.obesity === 'N'
+                          ? 'btn-corvita-selected font-semibold text-white'
+                          : 'btn-corvita-ghost text-[#A9BED8]'
+                      )}
+                    >
+                      Non-Obese
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateField('obesity', 'Y')}
+                      className={cn(
+                        'h-8 rounded-lg border px-2 text-xs font-medium transition-all duration-150 flex items-center justify-center cursor-pointer select-none',
+                        patient.obesity === 'Y'
+                          ? 'btn-corvita-selected font-semibold text-white'
+                          : 'btn-corvita-ghost text-[#A9BED8]'
+                      )}
+                    >
+                      Obese (BMI ≥30)
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -152,10 +356,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
         {activeTab === 'vitals' && (
           <div className="space-y-4">
             <div className="space-y-1">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Hemodynamic Parameters
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -221,10 +425,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Angina Symptoms Section */}
             <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Angina & Symptom Presentation
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <SegmentedToggle
@@ -301,10 +505,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Clinical signs */}
             <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Physical Examination Signs
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -363,10 +567,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
         {activeTab === 'labs' && (
           <div className="space-y-4">
             <div className="space-y-1">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Glucose & Lipid Biomarkers
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -436,10 +640,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Renal & Inflammatory Biomarkers */}
             <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Renal & Inflammatory Panel
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -498,10 +702,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Chronic Medical History */}
             <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Chronic Co-Morbidities
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -560,10 +764,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
         {activeTab === 'ecg' && (
           <div className="space-y-4">
             <div className="space-y-1">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Electrocardiography (12-Lead ECG)
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -641,10 +845,10 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Echocardiography Section */}
             <div className="space-y-1 pt-2">
-              <h2 className="font-serif tracking-widest text-xs uppercase text-amber-100/70">
+              <h3 className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3]/90 font-bold">
                 Echocardiography (TTE) & Angiography
-              </h2>
-              <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+              </h3>
+              <div className="h-[1px] w-full bg-gradient-to-r from-[#F04452]/40 via-[#651E2B]/20 to-transparent" />
             </div>
 
             <ClinicalStepperInput
@@ -674,9 +878,9 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
 
             {/* Target vessel stenosis */}
             <div className="space-y-1 pt-1">
-              <h3 className="font-serif tracking-wider text-[11px] uppercase text-amber-100/60">
+              <h4 className="font-serif tracking-wider text-[11px] uppercase text-[#8FA1B5]">
                 Coronary Vessel Status
-              </h3>
+              </h4>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -718,26 +922,46 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
       </div>
 
       {/* Base Action: "Run Predictive Simulation" Button */}
-      <div className="p-3.5 border-t border-slate-800/80 bg-[#080B10]/95">
-        <Button
-          variant="rpg"
-          size="lg"
+      <div className="p-4 border-t border-[rgba(145,173,221,0.22)] bg-[rgba(12,19,35,0.75)] backdrop-blur-md shrink-0 space-y-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+        <button
+          type="button"
           onClick={onRunSimulation}
           disabled={isSimulating}
-          className="w-full h-11 text-xs tracking-widest font-serif"
+          className="relative w-full h-12 rounded-xl bg-gradient-to-r from-[#FF536B] via-[#FF3158] to-[#C41838] hover:from-[#FF6B82] hover:via-[#FF4267] hover:to-[#D61E42] border border-[rgba(255,83,107,0.9)] text-[#F4F6FF] font-sans font-black text-xs uppercase tracking-wider shadow-[0_10px_35px_rgba(255,49,88,0.55),0_0_25px_rgba(255,49,88,0.45),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-2px_4px_rgba(0,0,0,0.35)] transition-all flex items-center justify-between px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden active:scale-[0.99] group"
         >
+          {/* Glass Top Specular Sheen */}
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />
+
           {isSimulating ? (
-            <>
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-300 border-t-transparent animate-spin" />
+            <div className="w-full flex items-center justify-center gap-2 relative z-10">
+              <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
               <span>Analyzing Clinical Parameters...</span>
-            </>
+            </div>
           ) : (
             <>
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Run Predictive Simulation</span>
+              <div className="flex items-center gap-3 relative z-10">
+                <span className="text-white/60 font-mono text-sm leading-none select-none">&lt;</span>
+                <Play className="w-4 h-4 fill-white text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] ml-1" />
+                <span className="drop-shadow-[0_0_8px_rgba(0,0,0,0.5)] tracking-wider">RUN PREDICTIVE SIMULATION</span>
+              </div>
+              <div className="flex items-center gap-2 relative z-10">
+                <svg className="w-16 h-5 text-[#FF9EAF] drop-shadow-[0_0_6px_rgba(255,158,175,0.85)]" viewBox="0 0 80 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M0 10h25l3-5 4 10 5-13 4 16 3-8h36" />
+                </svg>
+                <ChevronRight className="w-4 h-4 text-white/90 transition-transform group-hover:translate-x-0.5" />
+              </div>
             </>
           )}
-        </Button>
+        </button>
+
+        {/* 2-line Disclaimer Note below button */}
+        <div className="flex items-start gap-2 px-1 text-[10px] text-[#A9BED8] leading-tight">
+          <ShieldAlert className="w-3.5 h-3.5 text-[#FF3158] shrink-0 mt-0.5 drop-shadow-[0_0_6px_rgba(255,49,88,0.7)]" />
+          <div className="flex flex-col">
+            <span>For educational and decision-support purposes only.</span>
+            <span className="text-[#70849F]">Not a substitute for professional medical assessment or diagnostic imaging.</span>
+          </div>
+        </div>
       </div>
     </div>
   );

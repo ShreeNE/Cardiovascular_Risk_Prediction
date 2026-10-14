@@ -12,7 +12,9 @@ import {
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import gsap from 'gsap';
+import { Box } from 'lucide-react';
 import { PatientClinicalData, PredictionResult } from '../types/medical';
+import { cn } from '../lib/utils';
 
 // ─── Pre-load both assets so they are cached immediately ─────────────────────
 useGLTF.preload('/assets/torso.glb');
@@ -499,15 +501,16 @@ function CoronarySummaryBadge({
 
   return (
     <div className="absolute top-4 right-4 z-20 pointer-events-auto">
-      <div className="bg-[#0B0F17]/90 border border-slate-800/90 rounded-xl p-3 backdrop-blur-md shadow-2xl font-sans w-56 transition-all hover:border-amber-500/30">
+      <div className="bg-[rgba(15,27,42,0.85)] border border-[rgba(174,198,225,0.20)] rounded-xl p-3 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.12)] font-sans w-56 transition-all hover:border-[#FF334F]/40">
         <div className="flex items-center justify-between mb-2">
-          <span className="font-serif tracking-widest text-[10px] uppercase text-amber-200/90 font-medium">
+          <span className="font-serif tracking-widest text-[10px] uppercase text-[#F1F5FA] font-medium">
             Coronary Perfusion
           </span>
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
         </div>
 
         <div className="space-y-1.5">
+<<<<<<< Updated upstream
           {vessels.map(({ code, data }) => {
             const isActive = selectedCode === code;
             const dotColor = isActive ? data.activeColor : data.color;
@@ -521,6 +524,27 @@ function CoronarySummaryBadge({
                   backgroundColor: `${data.activeColor}12`,
                 } : undefined}
                 className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-slate-900/50 hover:bg-slate-800/70 border border-transparent hover:border-slate-700/60 transition-all text-left cursor-pointer group"
+=======
+          {vessels.map(({ code, data }) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => onSelectCode(code)}
+              className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-[rgba(24,39,56,0.6)] hover:bg-[rgba(24,39,56,0.9)] border border-transparent hover:border-[rgba(174,198,225,0.2)] transition-all text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
+                  style={{ backgroundColor: data.color }}
+                />
+                <span className="text-[#F1F5FA] font-mono text-[11px] font-semibold">
+                  {code}
+                </span>
+              </div>
+              <span
+                className="font-mono text-[11px] font-medium"
+                style={{ color: data.color }}
+>>>>>>> Stashed changes
               >
                 <div className="flex items-center gap-1.5">
                   <span
@@ -542,7 +566,7 @@ function CoronarySummaryBadge({
           })}
         </div>
 
-        <p className="text-[9px] font-mono text-slate-500 text-center mt-2 pt-1.5 border-t border-slate-800/60">
+        <p className="text-[9px] font-mono text-[#A3B5C9] text-center mt-2 pt-1.5 border-t border-[rgba(174,198,225,0.15)]">
           Click any vessel to inspect details
         </p>
       </div>
@@ -571,34 +595,41 @@ function VesselDetailPopup({
       <div
         className="w-80 rounded-xl border backdrop-blur-xl shadow-2xl p-4 text-xs font-sans animate-in fade-in zoom-in-95 duration-200"
         style={{
+<<<<<<< Updated upstream
           borderColor: vessel.activeColor + '70',
           backgroundColor: '#0B0F17F5',
           boxShadow: `0 10px 30px -5px ${vessel.activeColor}25, 0 0 15px rgba(0,0,0,0.8)`,
+=======
+          borderColor: vessel.color + '70',
+          backgroundColor: 'rgba(15, 27, 42, 0.88)',
+          boxShadow: `0 10px 30px -5px ${vessel.color}25, 0 0 15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12)`,
+>>>>>>> Stashed changes
         }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-800">
+        <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-[rgba(174,198,225,0.18)]">
           <div>
             <div className="flex items-center gap-1.5">
               <span
                 className="w-2.5 h-2.5 rounded-full shrink-0 animate-ping"
                 style={{ backgroundColor: vessel.activeColor }}
               />
-              <span className="font-serif tracking-wider text-[10px] uppercase text-amber-200/90 font-medium">
+              <span className="font-serif tracking-wider text-[10px] uppercase text-[#83DDF3] font-medium">
                 Coronary Analysis
               </span>
             </div>
-            <h4 className="text-sm font-bold text-slate-100 tracking-tight mt-0.5">
+            <h4 className="text-sm font-bold text-[#F1F5FA] tracking-tight mt-0.5">
               {vessel.name}
             </h4>
-            <p className="text-[10px] text-slate-400 font-mono">
+            <p className="text-[10px] text-[#A3B5C9] font-mono">
               ({vessel.code}) · {vessel.subname}
             </p>
           </div>
           <button
             onClick={onClose}
             type="button"
-            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer text-xs"
+            className="btn-corvita btn-icon !h-6 !w-6 text-white cursor-pointer text-xs"
+            title="Close"
           >
             ✕
           </button>
@@ -607,7 +638,7 @@ function VesselDetailPopup({
         {/* Risk Metrics */}
         <div className="py-2.5 space-y-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-[11px] text-[#A3B5C9] font-mono">
               Predicted Stenosis Risk:
             </span>
             <span
@@ -619,7 +650,7 @@ function VesselDetailPopup({
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full h-2 rounded-full bg-slate-800/80 overflow-hidden p-0.5">
+          <div className="w-full h-2 rounded-full bg-[rgba(4,8,15,0.8)] overflow-hidden p-0.5 border border-[rgba(174,198,225,0.15)]">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -643,29 +674,29 @@ function VesselDetailPopup({
         </div>
 
         {/* Anatomical Details */}
-        <div className="space-y-2 pt-1 border-t border-slate-800/80 text-[11px]">
+        <div className="space-y-2 pt-1 border-t border-[rgba(174,198,225,0.18)] text-[11px]">
           <div>
-            <span className="text-slate-400 font-mono text-[10px] uppercase tracking-wider block">
+            <span className="text-[#A3B5C9] font-mono text-[10px] uppercase tracking-wider block">
               Myocardial Territory:
             </span>
-            <p className="text-slate-300 leading-snug mt-0.5">
+            <p className="text-[#F1F5FA] leading-snug mt-0.5">
               {vessel.territory}
             </p>
           </div>
 
           <div>
-            <span className="text-slate-400 font-mono text-[10px] uppercase tracking-wider block">
+            <span className="text-[#A3B5C9] font-mono text-[10px] uppercase tracking-wider block">
               Clinical Significance:
             </span>
-            <p className="text-slate-400 text-[10px] leading-relaxed mt-0.5">
+            <p className="text-[#A3B5C9] text-[10px] leading-relaxed mt-0.5">
               {vessel.clinicalNote}
             </p>
           </div>
         </div>
 
         {/* Vessel Switch Tabs */}
-        <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between gap-1 text-[10px] font-mono">
-          <span className="text-slate-500">Quick Switch:</span>
+        <div className="mt-3 pt-2.5 border-t border-[rgba(174,198,225,0.18)] flex items-center justify-between gap-1 text-[10px] font-mono">
+          <span className="text-[#A3B5C9]">Quick Switch:</span>
           <div className="flex gap-1">
             {(['LAD', 'LCX', 'RCA'] as VesselCode[]).map((c) => {
               const cData = buildVesselData(c, prediction, patient);
@@ -691,7 +722,11 @@ function VesselDetailPopup({
                   className={`flex items-center gap-1 px-2 py-0.5 rounded border transition-all cursor-pointer ${
                     isActive
                       ? 'font-bold'
+<<<<<<< Updated upstream
                       : 'hover:opacity-80 bg-slate-900/60'
+=======
+                      : 'border-transparent text-[#A3B5C9] hover:text-[#F1F5FA] bg-[rgba(24,39,56,0.6)]'
+>>>>>>> Stashed changes
                   }`}
                 >
                   <span
@@ -761,16 +796,27 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
   );
 
   return (
-    <div className="relative w-full h-full flex flex-col rounded-xl border border-amber-500/20 bg-[#080B10]/95 shadow-[0_0_35px_rgba(245,158,11,0.06)] overflow-hidden">
+    <div className="relative w-full h-full flex flex-col rounded-2xl border border-[rgba(145,173,221,0.28)] bg-[rgba(12,19,35,0.88)] backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.75),0_0_30px_rgba(155,77,255,0.08),inset_0_1px_0_rgba(255,255,255,0.22)] overflow-hidden select-none">
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="relative z-20 flex items-center justify-between px-5 py-3 border-b border-amber-500/10 bg-[#0B0F17]/80 backdrop-blur-md shrink-0">
-        <span className="font-serif tracking-widest text-xs uppercase text-amber-200/90 font-medium">
-          {isPredicted
-            ? '[Interactive 3D Heart Model · Coronary Perfusion]'
-            : '[3D Anatomical Projection · Parameter Entry Stage]'}
-        </span>
+      <div className="relative z-20 flex items-center justify-between px-5 py-3 border-b border-[rgba(145,173,221,0.22)] bg-[#080A14]/85 backdrop-blur-xl shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="w-7 h-7 rounded-lg border border-[rgba(255,83,107,0.75)] bg-gradient-to-br from-[#FF536B] via-[#FF3158] to-[#C41838] flex items-center justify-center text-white shadow-[0_0_14px_rgba(255,49,88,0.5)] shrink-0">
+            <Box className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-mono tracking-wider text-[11px] xl:text-xs uppercase text-[#FF3158] font-bold block whitespace-nowrap">
+              {isPredicted
+                ? 'INTERACTIVE 3D HEART MODEL · CORONARY PERFUSION'
+                : '3D ANATOMICAL PROJECTION · PARAMETER ENTRY STAGE'}
+            </span>
+            <span className="text-[10px] text-[#A9BED8] font-sans block whitespace-nowrap">
+              Interactive 3D view of coronary arteries
+            </span>
+          </div>
+        </div>
+
         {isPredicted ? (
-          <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-md border border-slate-800 text-[11px] font-sans">
+          <div className="flex items-center gap-1 bg-[rgba(25,38,62,0.68)] p-1 rounded-lg border border-[rgba(145,173,221,0.24)] text-[11px] font-sans shrink-0 backdrop-blur-md">
             {[
               { angle: 'anterior' as ViewAngle, code: 'LAD' as VesselCode, label: 'Anterior (LAD)', data: ladVessel },
               { angle: 'lateral' as ViewAngle, code: 'LCX' as VesselCode, label: 'Lateral (LCX)', data: lcxVessel },
@@ -786,6 +832,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                   style={
                     isActive
                       ? {
+<<<<<<< Updated upstream
                           backgroundColor: `${data.activeColor}22`,
                           color: data.activeColor,
                           borderColor: `${data.activeColor}70`,
@@ -794,12 +841,22 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                       : {
                           borderColor: 'transparent',
                           color: data.color,
+=======
+                          backgroundColor: `${data.color}25`,
+                          color: data.color,
+                          borderColor: `${data.color}80`,
+                          boxShadow: `0 0 14px ${data.color}35`,
+>>>>>>> Stashed changes
                         }
                   }
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all cursor-pointer font-medium ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all cursor-pointer font-medium whitespace-nowrap ${
                     isActive
                       ? ''
+<<<<<<< Updated upstream
                       : 'hover:opacity-80 hover:bg-slate-800/60'
+=======
+                      : 'border-transparent text-[#A9BED8] hover:text-[#F4F6FF] hover:bg-[rgba(25,38,62,0.8)]'
+>>>>>>> Stashed changes
                   }`}
                 >
                   <span
@@ -812,15 +869,15 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
             })}
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <div className="flex items-center gap-2 text-[10px] font-mono text-[#A9BED8] bg-[rgba(25,38,62,0.68)] px-3 py-1.5 rounded-full border border-[rgba(145,173,221,0.24)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-md whitespace-nowrap shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#FF3158] shadow-[0_0_8px_#FF3158] animate-pulse" />
             <span>Interactive 3D View · Drag to Rotate</span>
           </div>
         )}
       </div>
 
       {/* ── 3D Canvas Area ───────────────────────────────────────────────── */}
-      <div className="relative flex-1 w-full min-h-0 cursor-grab active:cursor-grabbing">
+      <div className="relative flex-1 w-full min-h-0 cursor-grab active:cursor-grabbing overflow-hidden" style={{ backgroundColor: '#000000' }}>
         {/* DOM loading overlay */}
         {isLoading && <DOMLoader />}
 
@@ -856,11 +913,11 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
           {/* Soft Ground Shadow */}
           <ContactShadows
             position={[0, -1.9, 0]}
-            opacity={0.35}
-            scale={7}
-            blur={2}
-            far={3.5}
-            color="#0284c7"
+            opacity={0.45}
+            scale={8}
+            blur={2.5}
+            far={4}
+            color="#0ea5e9"
           />
 
           {/* Torso Model: Rendered when NOT predicted */}
@@ -886,8 +943,8 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
           {/* Orbit Controls */}
           <OrbitControls
             ref={controlsRef}
-            enableZoom
-            enablePan={false}
+            enableZoom={true}
+            enablePan={true}
             autoRotate={!isPredicted}
             autoRotateSpeed={0.5}
             minDistance={1.8}
@@ -921,7 +978,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
         {/* Bottom Click Hint */}
         {isPredicted && !selectedVessel && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <p className="text-[10px] font-mono text-slate-400 bg-slate-900/70 border border-slate-800 px-3 py-1 rounded-full shadow-lg tracking-wider animate-pulse">
+            <p className="text-[10px] font-mono text-[#8FA1B5] bg-[#080D14]/90 border border-[#1C2A38] px-3.5 py-1 rounded-full shadow-lg tracking-wider animate-pulse">
               Click a coronary vessel on the 3D heart or top-right card to inspect
             </p>
           </div>
@@ -929,10 +986,10 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
 
         {/* Predictive Simulation In-Flight Spinner */}
         {isSimulating && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#080B10]/75 backdrop-blur-xs">
-            <div className="flex flex-col items-center gap-2 p-5 rounded-xl bg-[#0B0F17]/95 border border-amber-500/40 shadow-2xl">
-              <div className="w-8 h-8 rounded-full border-2 border-amber-300 border-t-transparent animate-spin" />
-              <span className="font-serif tracking-widest text-xs uppercase text-amber-200">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#05080D]/80 backdrop-blur-xs">
+            <div className="flex flex-col items-center gap-2.5 p-6 rounded-2xl bg-[#080D14] border border-[#F04452]/50 shadow-[0_0_40px_rgba(240,68,82,0.3)]">
+              <div className="w-9 h-9 rounded-full border-2 border-[#F04452] border-t-transparent animate-spin" />
+              <span className="font-serif tracking-widest text-xs uppercase text-[#E8EDF3] font-bold">
                 Running Predictive Simulation...
               </span>
             </div>

@@ -31,13 +31,13 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
   return (
     <div
       className={cn(
-        'rounded-lg border border-slate-800/80 bg-slate-900/40 p-2.5 transition-colors hover:border-slate-700/90',
+        'glass-card rounded-xl p-3 transition-all',
         className
       )}
     >
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-300 font-sans">
+          <span className="text-[12px] font-medium text-[#F1F5FA] font-sans">
             {label}
           </span>
           {termInfo && (
@@ -47,19 +47,19 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
                 onClick={() => setShowTooltip(!showTooltip)}
-                className="text-slate-500 hover:text-amber-300 transition-colors cursor-pointer"
+                className="text-[#A3B5C9] hover:text-[#FF334F] transition-colors cursor-pointer"
                 title="Clinical Definition"
               >
-                <Info className="w-3 h-3" />
+                <Info className="w-3.5 h-3.5" />
               </button>
 
               {showTooltip && (
-                <div className="absolute left-0 bottom-5 z-50 w-64 rounded-md border border-amber-500/30 bg-[#0B0F17]/95 p-2.5 shadow-xl backdrop-blur-md text-[11px] text-slate-200 pointer-events-none font-sans">
-                  <div className="font-semibold text-amber-200 font-serif mb-0.5">{termInfo.name}</div>
-                  <div className="text-[10px] text-slate-400 mb-1 leading-relaxed">{termInfo.definition}</div>
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[9px] font-mono">
-                    <span className="text-slate-500">Normal State:</span>
-                    <span className="text-amber-300">{termInfo.normalRange}</span>
+                <div className="absolute left-0 bottom-5 z-50 w-64 rounded-xl border border-[rgba(174,198,225,0.25)] bg-[rgba(8,14,24,0.96)] p-3 shadow-2xl backdrop-blur-xl text-[11px] text-[#F1F5FA] pointer-events-none font-sans">
+                  <div className="font-semibold text-[#FF334F] font-serif mb-0.5">{termInfo.name}</div>
+                  <div className="text-[10px] text-[#A3B5C9] mb-1.5 leading-relaxed">{termInfo.definition}</div>
+                  <div className="flex items-center justify-between pt-1 border-t border-[rgba(174,198,225,0.18)] text-[9px] font-mono">
+                    <span className="text-[#A3B5C9]">Normal State:</span>
+                    <span className="text-[#83DDF3]">{termInfo.normalRange}</span>
                   </div>
                 </div>
               )}
@@ -69,7 +69,7 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
       </div>
 
       {/* Dual-state segmented button toggle */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-2 gap-2">
         {options.map((opt) => {
           const isActive = value === opt.value;
           return (
@@ -78,10 +78,10 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                'h-8 rounded border px-2.5 text-xs font-medium transition-all duration-150 flex items-center justify-center cursor-pointer select-none',
+                'h-9 rounded-lg px-3 text-xs font-medium transition-all duration-150 flex items-center justify-center cursor-pointer select-none',
                 isActive
-                  ? 'bg-amber-500/20 text-amber-200 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                  : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                  ? 'btn-corvita-selected font-semibold'
+                  : 'btn-corvita-ghost font-medium'
               )}
             >
               {opt.label}
