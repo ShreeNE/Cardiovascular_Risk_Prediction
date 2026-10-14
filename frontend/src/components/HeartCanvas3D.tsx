@@ -510,7 +510,6 @@ function CoronarySummaryBadge({
         </div>
 
         <div className="space-y-1.5">
-<<<<<<< Updated upstream
           {vessels.map(({ code, data }) => {
             const isActive = selectedCode === code;
             const dotColor = isActive ? data.activeColor : data.color;
@@ -523,35 +522,14 @@ function CoronarySummaryBadge({
                   borderColor: `${data.activeColor}50`,
                   backgroundColor: `${data.activeColor}12`,
                 } : undefined}
-                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-slate-900/50 hover:bg-slate-800/70 border border-transparent hover:border-slate-700/60 transition-all text-left cursor-pointer group"
-=======
-          {vessels.map(({ code, data }) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => onSelectCode(code)}
-              className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-[rgba(24,39,56,0.6)] hover:bg-[rgba(24,39,56,0.9)] border border-transparent hover:border-[rgba(174,198,225,0.2)] transition-all text-left cursor-pointer group"
-            >
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
-                  style={{ backgroundColor: data.color }}
-                />
-                <span className="text-[#F1F5FA] font-mono text-[11px] font-semibold">
-                  {code}
-                </span>
-              </div>
-              <span
-                className="font-mono text-[11px] font-medium"
-                style={{ color: data.color }}
->>>>>>> Stashed changes
+                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-[rgba(24,39,56,0.6)] hover:bg-[rgba(24,39,56,0.9)] border border-transparent hover:border-[rgba(255,83,107,0.4)] transition-all text-left cursor-pointer group"
               >
                 <div className="flex items-center gap-1.5">
                   <span
                     className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
                     style={{ backgroundColor: dotColor }}
                   />
-                  <span className="font-mono text-[11px] font-semibold" style={{ color: isActive ? data.activeColor : '#cbd5e1' }}>
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: isActive ? data.activeColor : '#F1F5FA' }}>
                     {code}
                   </span>
                 </div>
@@ -595,15 +573,9 @@ function VesselDetailPopup({
       <div
         className="w-80 rounded-xl border backdrop-blur-xl shadow-2xl p-4 text-xs font-sans animate-in fade-in zoom-in-95 duration-200"
         style={{
-<<<<<<< Updated upstream
           borderColor: vessel.activeColor + '70',
-          backgroundColor: '#0B0F17F5',
-          boxShadow: `0 10px 30px -5px ${vessel.activeColor}25, 0 0 15px rgba(0,0,0,0.8)`,
-=======
-          borderColor: vessel.color + '70',
           backgroundColor: 'rgba(15, 27, 42, 0.88)',
-          boxShadow: `0 10px 30px -5px ${vessel.color}25, 0 0 15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12)`,
->>>>>>> Stashed changes
+          boxShadow: `0 10px 30px -5px ${vessel.activeColor}25, 0 0 15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12)`,
         }}
       >
         {/* Header */}
@@ -722,11 +694,7 @@ function VesselDetailPopup({
                   className={`flex items-center gap-1 px-2 py-0.5 rounded border transition-all cursor-pointer ${
                     isActive
                       ? 'font-bold'
-<<<<<<< Updated upstream
-                      : 'hover:opacity-80 bg-slate-900/60'
-=======
                       : 'border-transparent text-[#A3B5C9] hover:text-[#F1F5FA] bg-[rgba(24,39,56,0.6)]'
->>>>>>> Stashed changes
                   }`}
                 >
                   <span
@@ -832,7 +800,6 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                   style={
                     isActive
                       ? {
-<<<<<<< Updated upstream
                           backgroundColor: `${data.activeColor}22`,
                           color: data.activeColor,
                           borderColor: `${data.activeColor}70`,
@@ -841,22 +808,12 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                       : {
                           borderColor: 'transparent',
                           color: data.color,
-=======
-                          backgroundColor: `${data.color}25`,
-                          color: data.color,
-                          borderColor: `${data.color}80`,
-                          boxShadow: `0 0 14px ${data.color}35`,
->>>>>>> Stashed changes
                         }
                   }
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all cursor-pointer font-medium whitespace-nowrap ${
                     isActive
                       ? ''
-<<<<<<< Updated upstream
-                      : 'hover:opacity-80 hover:bg-slate-800/60'
-=======
                       : 'border-transparent text-[#A9BED8] hover:text-[#F4F6FF] hover:bg-[rgba(25,38,62,0.8)]'
->>>>>>> Stashed changes
                   }`}
                 >
                   <span
