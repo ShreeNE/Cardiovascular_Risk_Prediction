@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, Suspense, useCallback, useMemo } from 'react';
-import { Canvas, useThree, ThreeEvent } from '@react-three/fiber';
+import { Canvas, useThree, ThreeEvent, useFrame } from '@react-three/fiber';
 import {
   useGLTF,
   OrbitControls,
@@ -63,26 +63,29 @@ const HEART_OFFSET: [number, number, number] = [
 function getVesselColorConfig(risk: number) {
   if (risk >= 70) {
     return {
-      color: '#ef4444',
+      color: '#ef4444',      // Vibrant red (unselected)
+      darkColor: '#7f1d1d',  // Dark red (selected)
       emissive: '#ef4444',
-      emissiveIntensity: 2.2,
+      emissiveIntensity: 0.1,
       status: 'Severe Stenosis (High Risk)',
       badgeClass: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
     };
   }
   if (risk >= 50) {
     return {
-      color: '#f59e0b',
+      color: '#f59e0b',      // Vibrant amber (unselected)
+      darkColor: '#78350f',  // Dark amber/brown (selected)
       emissive: '#f59e0b',
-      emissiveIntensity: 1.6,
+      emissiveIntensity: 0.1,
       status: 'Moderate Stenosis (Elevated)',
       badgeClass: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
     };
   }
   return {
-    color: '#10b981',
-    emissive: '#10b981',
-    emissiveIntensity: 1.2,
+    color: '#22c55e',      // Vibrant green (unselected)
+    darkColor: '#14532d',  // Dark green (selected)
+    emissive: '#22c55e',
+    emissiveIntensity: 0.1,
     status: 'Patent / Healthy Perfusion',
     badgeClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
   };
@@ -92,7 +95,7 @@ function getVesselColorConfig(risk: number) {
 function buildVesselData(
   code: VesselCode,
   prediction: PredictionResult | null,
-  patient: PatientClinicalData
+  patient?: PatientClinicalData | null
 ): VesselData {
   const configs: Record<
     VesselCode,
@@ -114,7 +117,7 @@ function buildVesselData(
       clinicalNote:
         'Primary coronary conduit ("widow-maker"). Severe occlusion creates acute anterior wall STEMI with high risk of cardiogenic shock.',
       riskVal: prediction?.ladStenosisRisk,
-      fallback: patient.ladProximal,
+      fallback: patient?.ladProximal ?? 'Normal',
     },
     LCX: {
       key: 'Vessel_LCX',
@@ -124,7 +127,7 @@ function buildVesselData(
       clinicalNote:
         'Occlusion causes lateral MI, often presenting with subtle or non-diagnostic ECG changes requiring heightened clinical suspicion.',
       riskVal: prediction?.lcxStenosisRisk,
-      fallback: patient.lcxProximal,
+      fallback: patient?.lcxProximal ?? 'Normal',
     },
     RCA: {
       key: 'Vessel_RCA',
@@ -134,7 +137,7 @@ function buildVesselData(
       clinicalNote:
         'Inferior STEMI frequently accompanies RV infarction, severe bradyarrhythmias, and high-degree AV conduction blocks.',
       riskVal: prediction?.rcaStenosisRisk,
-      fallback: patient.rcaProximal,
+      fallback: patient?.rcaProximal ?? 'Normal',
     },
   };
 
@@ -238,6 +241,7 @@ interface HeartModelProps {
   patient: PatientClinicalData;
   selectedVessel: VesselData | null;
   onSelectVessel: (v: VesselData | null) => void;
+  onSelectCode: (code: VesselCode) => void;
 }
 
 function HeartModel({
@@ -245,6 +249,7 @@ function HeartModel({
   patient,
   selectedVessel,
   onSelectVessel,
+  onSelectCode,
 }: HeartModelProps) {
   const { scene } = useGLTF('/assets/heart.glb');
   const [hoveredVessel, setHoveredVessel] = useState<string | null>(null);
@@ -272,37 +277,40 @@ function HeartModel({
       const mesh = child as THREE.Mesh;
       const meshName = mesh.name;
 
+      // Skip internal outline meshes to preserve their custom shader
+      if (meshName.startsWith('__')) return;
+
       if (vesselColorMap[meshName]) {
         const cfg = vesselColorMap[meshName];
         const isSelected = selectedVessel?.key === meshName;
         const isHovered = hoveredVessel === meshName;
 
+        const displayColor = isSelected ? cfg.darkColor : cfg.color;
+
         const mat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(cfg.color),
-          emissive: new THREE.Color(cfg.emissive),
-          emissiveIntensity: isSelected
-            ? cfg.emissiveIntensity + 1.2
-            : isHovered
-            ? cfg.emissiveIntensity + 0.6
-            : cfg.emissiveIntensity,
-          roughness: 0.18,
-          metalness: 0.25,
+          color: new THREE.Color(displayColor),
+          emissive: new THREE.Color(displayColor),
+          emissiveIntensity: isHovered && !isSelected ? 0.2 : 0.05,
+          roughness: 0.45,
+          metalness: 0.1,
         });
         mesh.material = mat;
       } else if (meshName === 'Object_151' || meshName === 'Object_152') {
-        // Deep anatomical cardiac muscle (replaces muddy metallic brown)
+        // Anatomical cardiac muscle (natural red myocardium)
         mesh.material = new THREE.MeshStandardMaterial({
-          color: new THREE.Color('#7f1d1d'),
-          roughness: 0.65,
+          color: new THREE.Color('#9e2a2b'),
+          roughness: 0.5,
           metalness: 0.05,
         });
+        mesh.renderOrder = 0;
       } else if (meshName === 'Object_123' || meshName === 'Object_148') {
         // Aorta and pulmonary trunk
         mesh.material = new THREE.MeshStandardMaterial({
-          color: new THREE.Color('#991b1b'),
+          color: new THREE.Color('#b91c1c'),
           roughness: 0.35,
           metalness: 0.1,
         });
+        mesh.renderOrder = 0;
       } else if (
         meshName === 'Object_174' ||
         meshName === 'Object_177' ||
@@ -315,35 +323,53 @@ function HeartModel({
           roughness: 0.4,
           metalness: 0.1,
         });
-      } else {
-        // Cartilage / connective tissue
+        mesh.renderOrder = 0;
+      } else if (meshName === 'Object_149' || meshName === 'Object_150') {
+        // Coronary sulci / connective tissue (toned to rich anatomical tissue, not stark white)
         mesh.material = new THREE.MeshStandardMaterial({
-          color: new THREE.Color('#f1f5f9'),
+          color: new THREE.Color('#782828'),
+          roughness: 0.6,
+          metalness: 0.05,
+        });
+        mesh.renderOrder = 0;
+      } else if (meshName === 'Object_3') {
+        // Valvular annulus / cartilage
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color('#cbd5e1'),
           roughness: 0.5,
           metalness: 0.05,
         });
+        mesh.renderOrder = 0;
+      } else {
+        // General anatomical tissue
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color('#9e2a2b'),
+          roughness: 0.5,
+          metalness: 0.05,
+        });
+        mesh.renderOrder = 0;
       }
     });
   }, [scene, prediction, patient, selectedVessel, hoveredVessel]);
 
-  // Click handler
+  // Click handler: selecting a vessel also rotates camera to look directly at it
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
       const meshName = e.object.name;
 
       if (meshName === 'Vessel_LAD') {
-        onSelectVessel(buildVesselData('LAD', prediction, patient));
+        onSelectCode('LAD');
       } else if (meshName === 'Vessel_LCX') {
-        onSelectVessel(buildVesselData('LCX', prediction, patient));
+        onSelectCode('LCX');
       } else if (meshName === 'Vessel_RCA') {
-        onSelectVessel(buildVesselData('RCA', prediction, patient));
+        onSelectCode('RCA');
       } else {
         // Clicking cardiac muscle or background deselects
         onSelectVessel(null);
       }
     },
-    [prediction, patient, onSelectVessel]
+    [onSelectCode, onSelectVessel]
   );
 
   // Hover handlers for pointer feedback
@@ -377,7 +403,8 @@ function HeartModel({
   );
 }
 
-// ─── Camera Transition Controller ─────────────────────────────────────────────
+
+
 type ViewAngle = 'anterior' | 'lateral' | 'inferior';
 
 interface CameraAnimatorProps {
@@ -396,19 +423,22 @@ function CameraAnimator({
   const prevViewAngle = useRef(viewAngle);
 
   useEffect(() => {
-    let target = { x: 0, y: 0, z: 4.2 };
+    // Exact camera positions and focus targets computed for each vessel
+    const targetCam = isPredicted
+      ? viewAngle === 'anterior'
+        ? { x: 1.2, y: 0.1, z: 3.9 } // Faces anterior interventricular groove (LAD)
+        : viewAngle === 'lateral'
+        ? { x: 3.6, y: 0.2, z: -1.6 } // Faces left lateral / posterior groove (LCX)
+        : { x: -2.6, y: 0.4, z: 3.1 } // Faces right coronary sulcus (RCA)
+      : { x: 0, y: 0, z: 4.2 };
 
-    if (isPredicted) {
-      if (viewAngle === 'anterior') {
-        target = { x: 0.5, y: 0.15, z: 4.2 };
-      } else if (viewAngle === 'lateral') {
-        target = { x: 3.8, y: 0.4, z: 1.6 };
-      } else if (viewAngle === 'inferior') {
-        target = { x: -2.8, y: -1.4, z: 2.8 };
-      }
-    } else {
-      target = { x: 0, y: 0, z: 4.2 };
-    }
+    const targetLook = isPredicted
+      ? viewAngle === 'anterior'
+        ? { x: 0.25, y: -0.05, z: 0.2 } // Centers LAD
+        : viewAngle === 'lateral'
+        ? { x: 0.35, y: 0.0, z: -0.1 } // Centers LCX
+        : { x: -0.1, y: -0.1, z: 0.15 } // Centers RCA
+      : { x: 0, y: 0, z: 0 };
 
     const isInitial =
       prevPredicted.current !== isPredicted ||
@@ -419,18 +449,25 @@ function CameraAnimator({
       prevViewAngle.current = viewAngle;
 
       gsap.to(camera.position, {
-        x: target.x,
-        y: target.y,
-        z: target.z,
+        x: targetCam.x,
+        y: targetCam.y,
+        z: targetCam.z,
         duration: 1.2,
         ease: 'power3.inOut',
-        onUpdate: () => {
-          if (controlsRef.current) {
-            controlsRef.current.target.set(0, 0, 0);
-            controlsRef.current.update();
-          }
-        },
       });
+
+      if (controlsRef.current) {
+        gsap.to(controlsRef.current.target, {
+          x: targetLook.x,
+          y: targetLook.y,
+          z: targetLook.z,
+          duration: 1.2,
+          ease: 'power3.inOut',
+          onUpdate: () => {
+            controlsRef.current?.update();
+          },
+        });
+      }
     }
   }, [isPredicted, viewAngle, camera, controlsRef]);
 
@@ -505,12 +542,16 @@ interface DetailPopupProps {
   vessel: VesselData;
   onClose: () => void;
   onSelectCode: (code: VesselCode) => void;
+  prediction: PredictionResult | null;
+  patient: PatientClinicalData;
 }
 
 function VesselDetailPopup({
   vessel,
   onClose,
   onSelectCode,
+  prediction,
+  patient,
 }: DetailPopupProps) {
   return (
     <div className="absolute top-4 right-4 z-30 pointer-events-auto">
@@ -613,20 +654,37 @@ function VesselDetailPopup({
         <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between gap-1 text-[10px] font-mono">
           <span className="text-slate-500">Quick Switch:</span>
           <div className="flex gap-1">
-            {(['LAD', 'LCX', 'RCA'] as VesselCode[]).map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => onSelectCode(c)}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                  vessel.code === c
-                    ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 bg-slate-900/60'
-                }`}
-              >
-                {c}
-              </button>
-            ))}
+            {(['LAD', 'LCX', 'RCA'] as VesselCode[]).map((c) => {
+              const cData = buildVesselData(c, prediction, patient);
+              const isActive = vessel.code === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => onSelectCode(c)}
+                  style={
+                    isActive
+                      ? {
+                          backgroundColor: `${cData.color}25`,
+                          color: cData.color,
+                          borderColor: `${cData.color}70`,
+                        }
+                      : undefined
+                  }
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded border transition-all cursor-pointer ${
+                    isActive
+                      ? 'font-bold'
+                      : 'border-transparent text-slate-400 hover:text-slate-200 bg-slate-900/60'
+                  }`}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: cData.color }}
+                  />
+                  <span>{c}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -645,6 +703,11 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState<VesselData | null>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+
+  // Pre-calculate vessel metrics for synchronized coloring across buttons and 3D
+  const ladVessel = useMemo(() => buildVesselData('LAD', prediction, patient), [prediction, patient]);
+  const lcxVessel = useMemo(() => buildVesselData('LCX', prediction, patient), [prediction, patient]);
+  const rcaVessel = useMemo(() => buildVesselData('RCA', prediction, patient), [prediction, patient]);
 
   // Clear selected vessel when simulation resets
   useEffect(() => {
@@ -673,11 +736,11 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
   const handleViewAngle = useCallback(
     (angle: ViewAngle) => {
       setViewAngle(angle);
-      if (angle === 'anterior') handleSelectCode('LAD');
-      if (angle === 'lateral') handleSelectCode('LCX');
-      if (angle === 'inferior') handleSelectCode('RCA');
+      if (angle === 'anterior') setSelectedVessel(buildVesselData('LAD', prediction, patient));
+      if (angle === 'lateral') setSelectedVessel(buildVesselData('LCX', prediction, patient));
+      if (angle === 'inferior') setSelectedVessel(buildVesselData('RCA', prediction, patient));
     },
-    [handleSelectCode]
+    [prediction, patient]
   );
 
   return (
@@ -691,39 +754,41 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
         </span>
         {isPredicted ? (
           <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-md border border-slate-800 text-[11px] font-sans">
-            <button
-              type="button"
-              onClick={() => handleViewAngle('anterior')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewAngle === 'anterior'
-                  ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Anterior (LAD)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleViewAngle('lateral')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewAngle === 'lateral'
-                  ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Lateral (LCX)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleViewAngle('inferior')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewAngle === 'inferior'
-                  ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Inferior (RCA)
-            </button>
+            {[
+              { angle: 'anterior' as ViewAngle, code: 'LAD' as VesselCode, label: 'Anterior (LAD)', data: ladVessel },
+              { angle: 'lateral' as ViewAngle, code: 'LCX' as VesselCode, label: 'Lateral (LCX)', data: lcxVessel },
+              { angle: 'inferior' as ViewAngle, code: 'RCA' as VesselCode, label: 'Inferior (RCA)', data: rcaVessel },
+            ].map(({ angle, label, data }) => {
+              const isActive = viewAngle === angle;
+              return (
+                <button
+                  key={angle}
+                  type="button"
+                  onClick={() => handleViewAngle(angle)}
+                  style={
+                    isActive
+                      ? {
+                          backgroundColor: `${data.color}22`,
+                          color: data.color,
+                          borderColor: `${data.color}70`,
+                          boxShadow: `0 0 12px ${data.color}25`,
+                        }
+                      : undefined
+                  }
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all cursor-pointer font-medium ${
+                    isActive
+                      ? ''
+                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${isActive ? 'animate-pulse' : 'opacity-60'}`}
+                    style={{ backgroundColor: data.color }}
+                  />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800/60">
@@ -792,6 +857,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                 patient={patient}
                 selectedVessel={selectedVessel}
                 onSelectVessel={setSelectedVessel}
+                onSelectCode={handleSelectCode}
               />
             </Suspense>
           )}
@@ -818,6 +884,8 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
               vessel={selectedVessel}
               onClose={() => setSelectedVessel(null)}
               onSelectCode={handleSelectCode}
+              prediction={prediction}
+              patient={patient}
             />
           ) : (
             <CoronarySummaryBadge
