@@ -22,7 +22,11 @@ import numpy as np
 import pandas as pd
 import joblib
 import xgboost as xgb
-import shap
+
+try:
+    import shap
+except ImportError:
+    shap = None
 
 logger = logging.getLogger("CorVita-Inference")
 
@@ -180,6 +184,7 @@ class ModelRegistry:
 
     preprocessor: Any = None
     models: Dict[str, Any] = {}
+    xgb_boosters: Dict[str, Any] = {}
     shap_explainers: Dict[str, Any] = {}
     feature_columns: List[str] = []
 
@@ -210,14 +215,24 @@ class ModelRegistry:
         with open(_FEATURE_COLUMNS_PATH) as f:
             self.feature_columns = json.load(f)
 
-        # Load target models
+        # Load target models & native XGBoost boosters for lean TreeSHAP
+        self.xgb_boosters = {}
         for target in TARGET_LABELS:
-            # 1. Prefer platform-agnostic Hybrid Voting Classifier (sklearn + XGBoost JSON)
-            sk_path = os.path.join(SAVED_MODELS_DIR, f"sklearn_ensemble_{target}.joblib")
+            # Load native XGBoost booster (for native, zero-dependency TreeSHAP)
             xgb_path = os.path.join(SAVED_MODELS_DIR, f"{target.lower()}_xgb.json")
             if not os.path.exists(xgb_path):
                 xgb_path = os.path.join(SAVED_MODELS_DIR, f"{target}_xgb.json")
+            if os.path.exists(xgb_path):
+                try:
+                    booster = xgb.Booster()
+                    booster.load_model(xgb_path)
+                    self.xgb_boosters[target] = booster
+                    logger.info(f"Loaded native XGBoost booster for {target} (TreeSHAP ready)")
+                except Exception as e:
+                    logger.warning(f"Could not load native XGBoost booster for {target}: {e}")
 
+            # 1. Prefer platform-agnostic Hybrid Voting Classifier (sklearn + XGBoost JSON)
+            sk_path = os.path.join(SAVED_MODELS_DIR, f"sklearn_ensemble_{target}.joblib")
             if os.path.exists(sk_path) and os.path.exists(xgb_path):
                 try:
                     self.models[target] = HybridVotingClassifier(target, SAVED_MODELS_DIR)
@@ -240,24 +255,24 @@ class ModelRegistry:
             else:
                 logger.warning(f"Model file not found for target {target}: {model_path}")
 
-        # Load SHAP explainers: try file, or build directly from loaded XGBoost estimators
+        # Optional: Load external SHAP explainers if the shap library is available
         self.shap_explainers = {}
-        if os.path.exists(_SHAP_EXPLAINERS_PATH):
-            try:
-                self.shap_explainers = joblib.load(_SHAP_EXPLAINERS_PATH)
-            except Exception as e:
-                logger.warning(f"Could not load pre-pickled SHAP explainers ({e}). Generating on-the-fly.")
-
-        # Ensure all models have a corresponding SHAP TreeExplainer
-        for target in TARGET_LABELS:
-            if target not in self.shap_explainers and target in self.models:
+        if shap is not None:
+            if os.path.exists(_SHAP_EXPLAINERS_PATH):
                 try:
-                    xgb_est = self.models[target].named_estimators_.get("xgb")
-                    if xgb_est is not None:
-                        self.shap_explainers[target] = shap.TreeExplainer(xgb_est)
-                        logger.info(f"Generated instant SHAP TreeExplainer for {target}")
+                    self.shap_explainers = joblib.load(_SHAP_EXPLAINERS_PATH)
                 except Exception as e:
-                    logger.warning(f"Failed generating SHAP explainer for {target}: {e}")
+                    logger.warning(f"Could not load pre-pickled SHAP explainers ({e}). Generating on-the-fly.")
+
+            for target in TARGET_LABELS:
+                if target not in self.shap_explainers and target in self.models:
+                    try:
+                        xgb_est = self.models[target].named_estimators_.get("xgb")
+                        if xgb_est is not None:
+                            self.shap_explainers[target] = shap.TreeExplainer(xgb_est)
+                            logger.info(f"Generated instant SHAP TreeExplainer for {target}")
+                    except Exception as e:
+                        logger.warning(f"Failed generating SHAP explainer for {target}: {e}")
 
         elapsed = time.time() - t0
         logger.info(
@@ -287,24 +302,39 @@ def compute_shap_attributions(
     Returns top N features ranked by absolute SHAP importance with clinical metadata.
     """
     registry = get_registry()
-    if target not in registry.shap_explainers:
-        return []
+    patient_shap = None
 
-    explainer = registry.shap_explainers[target]
-    shap_values = explainer.shap_values(X_scaled)
+    # 1. Native XGBoost TreeSHAP (ultra-fast C++ calculation, zero dependency on shap/numba)
+    if target in registry.xgb_boosters:
+        try:
+            booster = registry.xgb_boosters[target]
+            dmat = xgb.DMatrix(X_scaled)
+            contribs = booster.predict(dmat, pred_contribs=True)
+            patient_shap = contribs[0, :-1]  # Exclude last element which is the bias term
+        except Exception as e:
+            logger.warning(f"Native XGBoost SHAP computation failed for {target}: {e}")
 
-    # Handle both 1D and 2D SHAP output shapes
-    if hasattr(shap_values, 'shape') and shap_values.ndim == 2:
-        patient_shap = shap_values[0]
-    elif isinstance(shap_values, (list, np.ndarray)):
-        arr = np.array(shap_values)
-        if arr.ndim == 2:
-            patient_shap = arr[0]
-        elif arr.ndim == 3:
-            patient_shap = arr[0, :, 1] if arr.shape[2] > 1 else arr[0, :, 0]
-        else:
-            patient_shap = arr.ravel()
-    else:
+    # 2. Fallback to external shap.TreeExplainer if available
+    if patient_shap is None and target in registry.shap_explainers:
+        try:
+            explainer = registry.shap_explainers[target]
+            shap_values = explainer.shap_values(X_scaled)
+
+            # Handle both 1D and 2D SHAP output shapes
+            if hasattr(shap_values, 'shape') and shap_values.ndim == 2:
+                patient_shap = shap_values[0]
+            elif isinstance(shap_values, (list, np.ndarray)):
+                arr = np.array(shap_values)
+                if arr.ndim == 2:
+                    patient_shap = arr[0]
+                elif arr.ndim == 3:
+                    patient_shap = arr[0, :, 1] if arr.shape[2] > 1 else arr[0, :, 0]
+                else:
+                    patient_shap = arr.ravel()
+        except Exception as e:
+            logger.warning(f"Fallback SHAP explainer failed for {target}: {e}")
+
+    if patient_shap is None:
         return []
 
     # Rank by absolute impact

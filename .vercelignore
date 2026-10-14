@@ -1,0 +1,7 @@
+# Files excluded from Vercel deployment bundle to minimize function size
+model/data/
+model/train.py
+model/requirements-dev.txt
+model/__pycache__/
+*.csv
+*.xlsx

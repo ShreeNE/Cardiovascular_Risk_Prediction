@@ -203,7 +203,7 @@ async def health_check():
             "status":         "healthy",
             "models_loaded":  list(registry.models.keys()),
             "features_count": len(registry.feature_columns),
-            "shap_available": list(registry.shap_explainers.keys()),
+            "shap_available": list(registry.xgb_boosters.keys()) or list(registry.shap_explainers.keys()),
             "timestamp":      datetime.utcnow().isoformat()
         }
     except Exception as e:
