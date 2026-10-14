@@ -84,7 +84,7 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
                   LAD Territory
                 </span>
                 <div className="text-sm font-semibold font-mono text-amber-300">
-                  {prediction.ladStenosisRisk}% Risk
+                  {prediction.ladStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
 
@@ -93,7 +93,7 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
                   LCX Territory
                 </span>
                 <div className="text-sm font-semibold font-mono text-amber-300">
-                  {prediction.lcxStenosisRisk}% Risk
+                  {prediction.lcxStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
 
@@ -102,7 +102,7 @@ export const PredictionResultsHUD: React.FC<PredictionResultsHUDProps> = ({
                   RCA Territory
                 </span>
                 <div className="text-sm font-semibold font-mono text-amber-300">
-                  {prediction.rcaStenosisRisk}% Risk
+                  {prediction.rcaStenosisRisk.toFixed(2)}% Risk
                 </div>
               </div>
             </div>
