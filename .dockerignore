@@ -1,0 +1,15 @@
+.git
+.gitignore
+.vercel
+.vercelignore
+vercel.json
+node_modules
+frontend/node_modules
+frontend/.next
+frontend/tsconfig.tsbuildinfo
+model/__pycache__
+model/data/
+model/train.py
+model/requirements-dev.txt
+*.md
+*.log

@@ -11,6 +11,7 @@ scikit-learn>=1.4.0
 xgboost>=2.0.0
 joblib>=1.3.0
 
-# API Backend
+# API Backend & Server
 fastapi>=0.110.0
 pydantic>=2.6.0
+uvicorn>=0.28.0
