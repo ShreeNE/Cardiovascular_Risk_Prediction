@@ -5,12 +5,11 @@ import confetti from 'canvas-confetti';
 import { DisclaimerModal } from '../components/DisclaimerModal';
 import { HogwartsHeaderNav, MainCategoryTab } from '../components/HogwartsHeaderNav';
 import { CleanParameterPanel } from '../components/CleanParameterPanel';
+import { PredictionInlinePanel } from '../components/PredictionInlinePanel';
 import { HeartCanvas3D } from '../components/HeartCanvas3D';
-import { PredictionResultsHUD } from '../components/PredictionResultsHUD';
-import { ControllerFooter } from '../components/ControllerFooter';
 import { PatientClinicalData, PredictionResult } from '../types/medical';
 import { defaultBaselinePatient, archetypePresets } from '../data/patientArchetypes';
-import { runCadMLInference, checkApiHealth } from '../utils/cadPredictor';
+import { runCadMLInference } from '../utils/cadPredictor';
 
 export default function Home() {
   // Step 1: Mandatory Disclaimer Modal state (defaults to open on initial load)
@@ -28,8 +27,6 @@ export default function Home() {
   // Prediction State
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [showResultsHUD, setShowResultsHUD] = useState<boolean>(false);
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
 
   // Check initial disclaimer acceptance from session
   useEffect(() => {
@@ -38,8 +35,6 @@ export default function Home() {
       setShowDisclaimer(false);
       setHasAcceptedDisclaimer(true);
     }
-    // Check ML API health
-    checkApiHealth().then(online => setApiOnline(online));
   }, []);
 
   const handleAcceptDisclaimer = () => {
@@ -55,7 +50,6 @@ export default function Home() {
     try {
       const result = await runCadMLInference(patient);
       setPrediction(result);
-      setShowResultsHUD(true);
 
       if (result.overallRiskScore < 25) {
         confetti({
@@ -70,6 +64,13 @@ export default function Home() {
     } finally {
       setIsSimulating(false);
     }
+  };
+
+  // Reset everything back to baseline
+  const handleFullReset = () => {
+    setPrediction(null);
+    setPatient({ ...defaultBaselinePatient });
+    setSelectedPresetId('healthy-control');
   };
 
   // Preset loading
@@ -137,20 +138,6 @@ export default function Home() {
       {/* Hogwarts Legacy Subtle Radial Vignette Background */}
       <div className="fixed inset-0 rpg-vignette pointer-events-none z-0" />
 
-      {/* ML Engine Status Badge */}
-      {apiOnline !== null && (
-        <div className={`fixed bottom-4 left-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono tracking-wide backdrop-blur-md transition-all duration-700 ${
-          apiOnline
-            ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
-            : 'bg-amber-950/70 border-amber-500/40 text-amber-300'
-        }`}>
-          <span className={`inline-block w-1.5 h-1.5 rounded-full animate-pulse ${
-            apiOnline ? 'bg-emerald-400' : 'bg-amber-400'
-          }`} />
-          {apiOnline ? 'ML ENGINE ONLINE' : 'ML ENGINE OFFLINE — FALLBACK'}
-        </div>
-      )}
-
       {/* Mandatory Disclaimer Modal Overlay (Step 1) */}
       <DisclaimerModal
         isOpen={showDisclaimer}
@@ -172,15 +159,25 @@ export default function Home() {
 
       {/* Main Split Layout: Floating Left Panel (~38%) and Open 3D Canvas (~62%) */}
       <main className="relative z-10 flex-1 w-full max-w-[1920px] mx-auto p-4 sm:p-6 flex flex-col lg:flex-row gap-5 items-stretch overflow-hidden">
-        {/* LEFT FLOATING PANEL (Width: ~38%): Clean Sterile Form Controls */}
+        {/* LEFT FLOATING PANEL: parameter inputs OR prediction results */}
         <section className="w-full lg:w-[38%] xl:w-[36%] flex flex-col h-[650px] lg:h-[calc(100vh-140px)] min-h-[580px]">
-          <CleanParameterPanel
-            patient={patient}
-            setPatient={setPatient}
-            activeTab={activeTab}
-            onRunSimulation={handleRunSimulation}
-            isSimulating={isSimulating}
-          />
+          {prediction && !isSimulating ? (
+            <PredictionInlinePanel
+              prediction={prediction}
+              patient={patient}
+              onReset={handleFullReset}
+              onRunAgain={handleRunSimulation}
+              isSimulating={isSimulating}
+            />
+          ) : (
+            <CleanParameterPanel
+              patient={patient}
+              setPatient={setPatient}
+              activeTab={activeTab}
+              onRunSimulation={handleRunSimulation}
+              isSimulating={isSimulating}
+            />
+          )}
         </section>
 
         {/* RIGHT OPEN CANVAS (Width: ~62%): 3D Viewer & Hemodynamic Perfusion */}
@@ -193,20 +190,16 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Diagnostic Synthesis Report Modal */}
-      <PredictionResultsHUD
-        prediction={prediction}
-        isOpen={showResultsHUD}
-        onClose={() => setShowResultsHUD(false)}
-      />
-
-      {/* Bottom Console Gamepad Hints & Understated Disclaimer */}
-      <ControllerFooter
-        onRunSimulation={handleRunSimulation}
-        onRandomize={handleRandomize}
-        onReset={() => setPatient({ ...defaultBaselinePatient })}
-        onOpenDisclaimer={() => setShowDisclaimer(true)}
-      />
+      {/* Bottom footer – disclaimer link only, no run/reset buttons */}
+      <footer className="w-full border-t border-amber-500/10 bg-[#080B10]/95 px-6 py-2.5 flex items-center justify-between text-xs font-mono text-slate-400 z-30 select-none">
+        <button
+          onClick={() => setShowDisclaimer(true)}
+          className="text-[11px] text-slate-400 hover:text-amber-300 transition-colors underline-offset-4 hover:underline cursor-pointer font-sans"
+        >
+          Medical Disclaimer &amp; Protocol Notice
+        </button>
+        <span className="text-[10px] text-slate-500 font-sans">Educational Demonstration Only</span>
+      </footer>
     </div>
   );
 }
