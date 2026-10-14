@@ -614,7 +614,7 @@ function VesselDetailPopup({
               className="text-lg font-mono font-extrabold"
               style={{ color: vessel.activeColor }}
             >
-              {vessel.risk}%
+              {vessel.risk.toFixed(2)}%
             </span>
           </div>
 
