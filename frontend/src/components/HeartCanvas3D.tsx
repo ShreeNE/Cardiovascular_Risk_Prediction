@@ -37,7 +37,8 @@ export interface VesselData {
   clinicalNote: string;
   risk: number;
   status: string;
-  color: string;
+  color: string;        // dark (default / unselected)
+  activeColor: string;  // light/bright (selected / active)
   emissive: string;
   fallbackStatus?: string;
 }
@@ -63,29 +64,29 @@ const HEART_OFFSET: [number, number, number] = [
 function getVesselColorConfig(risk: number) {
   if (risk >= 70) {
     return {
-      color: '#ef4444',      // Vibrant red (unselected)
-      darkColor: '#7f1d1d',  // Dark red (selected)
-      emissive: '#ef4444',
-      emissiveIntensity: 0.1,
+      color: '#7f1d1d',       // Dark red (default / unselected)
+      activeColor: '#ef4444', // Bright red (selected / active)
+      emissive: '#7f1d1d',
+      emissiveIntensity: 0.06,
       status: 'Severe Stenosis (High Risk)',
       badgeClass: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
     };
   }
   if (risk >= 50) {
     return {
-      color: '#f59e0b',      // Vibrant amber (unselected)
-      darkColor: '#78350f',  // Dark amber/brown (selected)
-      emissive: '#f59e0b',
-      emissiveIntensity: 0.1,
+      color: '#854d0e',       // Deep gold/ochre (default / unselected) — not brownish
+      activeColor: '#fbbf24', // Bright gold/yellow (selected / active)
+      emissive: '#854d0e',
+      emissiveIntensity: 0.06,
       status: 'Moderate Stenosis (Elevated)',
       badgeClass: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
     };
   }
   return {
-    color: '#22c55e',      // Vibrant green (unselected)
-    darkColor: '#14532d',  // Dark green (selected)
-    emissive: '#22c55e',
-    emissiveIntensity: 0.1,
+    color: '#14532d',       // Dark green (default / unselected)
+    activeColor: '#22c55e', // Bright green (selected / active)
+    emissive: '#14532d',
+    emissiveIntensity: 0.06,
     status: 'Patent / Healthy Perfusion',
     badgeClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
   };
@@ -154,7 +155,8 @@ function buildVesselData(
     clinicalNote: c.clinicalNote,
     risk,
     status: colorCfg.status,
-    color: colorCfg.color,
+    color: colorCfg.color,           // dark (default)
+    activeColor: colorCfg.activeColor, // bright (selected)
     emissive: colorCfg.emissive,
     fallbackStatus: c.fallback,
   };
@@ -285,12 +287,13 @@ function HeartModel({
         const isSelected = selectedVessel?.key === meshName;
         const isHovered = hoveredVessel === meshName;
 
-        const displayColor = isSelected ? cfg.darkColor : cfg.color;
+        // Default = dark color; selected/active = bright color
+        const displayColor = isSelected ? cfg.activeColor : cfg.color;
 
         const mat = new THREE.MeshStandardMaterial({
           color: new THREE.Color(displayColor),
           emissive: new THREE.Color(displayColor),
-          emissiveIntensity: isHovered && !isSelected ? 0.2 : 0.05,
+          emissiveIntensity: isSelected ? 0.25 : isHovered ? 0.15 : 0.05,
           roughness: 0.45,
           metalness: 0.1,
         });
@@ -479,12 +482,14 @@ interface SummaryBadgeProps {
   prediction: PredictionResult | null;
   patient: PatientClinicalData;
   onSelectCode: (code: VesselCode) => void;
+  selectedCode: VesselCode | null;
 }
 
 function CoronarySummaryBadge({
   prediction,
   patient,
   onSelectCode,
+  selectedCode,
 }: SummaryBadgeProps) {
   const vessels: Array<{ code: VesselCode; data: VesselData }> = [
     { code: 'LAD', data: buildVesselData('LAD', prediction, patient) },
@@ -503,30 +508,38 @@ function CoronarySummaryBadge({
         </div>
 
         <div className="space-y-1.5">
-          {vessels.map(({ code, data }) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => onSelectCode(code)}
-              className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-slate-900/50 hover:bg-slate-800/70 border border-transparent hover:border-slate-700/60 transition-all text-left cursor-pointer group"
-            >
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
-                  style={{ backgroundColor: data.color }}
-                />
-                <span className="text-slate-300 font-mono text-[11px] font-semibold">
-                  {code}
-                </span>
-              </div>
-              <span
-                className="font-mono text-[11px] font-medium"
-                style={{ color: data.color }}
+          {vessels.map(({ code, data }) => {
+            const isActive = selectedCode === code;
+            const dotColor = isActive ? data.activeColor : data.color;
+            return (
+              <button
+                key={code}
+                type="button"
+                onClick={() => onSelectCode(code)}
+                style={isActive ? {
+                  borderColor: `${data.activeColor}50`,
+                  backgroundColor: `${data.activeColor}12`,
+                } : undefined}
+                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-slate-900/50 hover:bg-slate-800/70 border border-transparent hover:border-slate-700/60 transition-all text-left cursor-pointer group"
               >
-                {data.risk}% Risk
-              </span>
-            </button>
-          ))}
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
+                    style={{ backgroundColor: dotColor }}
+                  />
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: isActive ? data.activeColor : '#cbd5e1' }}>
+                    {code}
+                  </span>
+                </div>
+                <span
+                  className="font-mono text-[11px] font-medium"
+                  style={{ color: dotColor }}
+                >
+                  {data.risk}% Risk
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <p className="text-[9px] font-mono text-slate-500 text-center mt-2 pt-1.5 border-t border-slate-800/60">
@@ -558,9 +571,9 @@ function VesselDetailPopup({
       <div
         className="w-80 rounded-xl border backdrop-blur-xl shadow-2xl p-4 text-xs font-sans animate-in fade-in zoom-in-95 duration-200"
         style={{
-          borderColor: vessel.color + '70',
+          borderColor: vessel.activeColor + '70',
           backgroundColor: '#0B0F17F5',
-          boxShadow: `0 10px 30px -5px ${vessel.color}25, 0 0 15px rgba(0,0,0,0.8)`,
+          boxShadow: `0 10px 30px -5px ${vessel.activeColor}25, 0 0 15px rgba(0,0,0,0.8)`,
         }}
       >
         {/* Header */}
@@ -569,7 +582,7 @@ function VesselDetailPopup({
             <div className="flex items-center gap-1.5">
               <span
                 className="w-2.5 h-2.5 rounded-full shrink-0 animate-ping"
-                style={{ backgroundColor: vessel.color }}
+                style={{ backgroundColor: vessel.activeColor }}
               />
               <span className="font-serif tracking-wider text-[10px] uppercase text-amber-200/90 font-medium">
                 Coronary Analysis
@@ -599,7 +612,7 @@ function VesselDetailPopup({
             </span>
             <span
               className="text-lg font-mono font-extrabold"
-              style={{ color: vessel.color }}
+              style={{ color: vessel.activeColor }}
             >
               {vessel.risk}%
             </span>
@@ -611,8 +624,8 @@ function VesselDetailPopup({
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${Math.max(5, Math.min(100, vessel.risk))}%`,
-                backgroundColor: vessel.color,
-                boxShadow: `0 0 8px ${vessel.color}`,
+                backgroundColor: vessel.activeColor,
+                boxShadow: `0 0 8px ${vessel.activeColor}`,
               }}
             />
           </div>
@@ -620,9 +633,9 @@ function VesselDetailPopup({
           <div
             className="px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold text-center border"
             style={{
-              color: vessel.color,
-              borderColor: vessel.color + '40',
-              backgroundColor: vessel.color + '15',
+              color: vessel.activeColor,
+              borderColor: vessel.activeColor + '40',
+              backgroundColor: vessel.activeColor + '15',
             }}
           >
             {vessel.status}
@@ -657,6 +670,7 @@ function VesselDetailPopup({
             {(['LAD', 'LCX', 'RCA'] as VesselCode[]).map((c) => {
               const cData = buildVesselData(c, prediction, patient);
               const isActive = vessel.code === c;
+              const tabColor = isActive ? cData.activeColor : cData.color;
               return (
                 <button
                   key={c}
@@ -665,21 +679,24 @@ function VesselDetailPopup({
                   style={
                     isActive
                       ? {
-                          backgroundColor: `${cData.color}25`,
-                          color: cData.color,
-                          borderColor: `${cData.color}70`,
+                          backgroundColor: `${cData.activeColor}25`,
+                          color: cData.activeColor,
+                          borderColor: `${cData.activeColor}70`,
                         }
-                      : undefined
+                      : {
+                          borderColor: `${cData.color}40`,
+                          color: cData.color,
+                        }
                   }
                   className={`flex items-center gap-1 px-2 py-0.5 rounded border transition-all cursor-pointer ${
                     isActive
                       ? 'font-bold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200 bg-slate-900/60'
+                      : 'hover:opacity-80 bg-slate-900/60'
                   }`}
                 >
                   <span
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: cData.color }}
+                    style={{ backgroundColor: tabColor }}
                   />
                   <span>{c}</span>
                 </button>
@@ -760,6 +777,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
               { angle: 'inferior' as ViewAngle, code: 'RCA' as VesselCode, label: 'Inferior (RCA)', data: rcaVessel },
             ].map(({ angle, label, data }) => {
               const isActive = viewAngle === angle;
+              const btnColor = isActive ? data.activeColor : data.color;
               return (
                 <button
                   key={angle}
@@ -768,22 +786,25 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
                   style={
                     isActive
                       ? {
-                          backgroundColor: `${data.color}22`,
-                          color: data.color,
-                          borderColor: `${data.color}70`,
-                          boxShadow: `0 0 12px ${data.color}25`,
+                          backgroundColor: `${data.activeColor}22`,
+                          color: data.activeColor,
+                          borderColor: `${data.activeColor}70`,
+                          boxShadow: `0 0 12px ${data.activeColor}25`,
                         }
-                      : undefined
+                      : {
+                          borderColor: 'transparent',
+                          color: data.color,
+                        }
                   }
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all cursor-pointer font-medium ${
                     isActive
                       ? ''
-                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      : 'hover:opacity-80 hover:bg-slate-800/60'
                   }`}
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${isActive ? 'animate-pulse' : 'opacity-60'}`}
-                    style={{ backgroundColor: data.color }}
+                    className={`w-1.5 h-1.5 rounded-full ${isActive ? 'animate-pulse' : 'opacity-70'}`}
+                    style={{ backgroundColor: btnColor }}
                   />
                   <span>{label}</span>
                 </button>
@@ -892,6 +913,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
               prediction={prediction}
               patient={patient}
               onSelectCode={handleSelectCode}
+              selectedCode={null}
             />
           )
         )}
