@@ -58,9 +58,9 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
   const bmiStatus = getBmiStatus(patient.bmi);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[rgba(12,19,35,0.88)] backdrop-blur-2xl rounded-2xl border border-[rgba(145,173,221,0.28)] shadow-[0_20px_50px_rgba(0,0,0,0.75),0_0_30px_rgba(155,77,255,0.08),inset_0_1px_0_rgba(255,255,255,0.22)] overflow-hidden select-none">
+    <div className="w-full h-full flex flex-col glass-panel-premium rounded-2xl overflow-hidden select-none">
       {/* ── Panel Header ─────────────────────────────────────────────────── */}
-      <div className="px-5 py-3.5 border-b border-[rgba(145,173,221,0.22)] bg-[rgba(25,38,62,0.50)] backdrop-blur-md flex items-center justify-between shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+      <div className="px-5 py-3.5 border-b border-white/10 bg-[rgba(2,6,23,0.60)] backdrop-blur-md flex items-center justify-between shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl border border-[rgba(255,83,107,0.75)] bg-gradient-to-br from-[#FF536B] via-[#FF3158] to-[#C41838] flex items-center justify-center text-white shadow-[0_0_18px_rgba(255,49,88,0.55),inset_0_1px_0_rgba(255,255,255,0.45)] shrink-0">
             <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -114,7 +114,7 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
                 onChange={(v) => updateField('age', v)}
               />
 
-              <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+              <div className="glass-card-premium rounded-xl p-2.5 transition-all">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <Dna className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
@@ -171,7 +171,7 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
               {/* Weight & Height */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Weight Card with Scale Icon */}
-                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                <div className="glass-card-premium rounded-xl p-2.5 transition-all">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <Scale className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
@@ -208,7 +208,7 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
                 </div>
 
                 {/* Height Card with Ruler Icon */}
-                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                <div className="glass-card-premium rounded-xl p-2.5 transition-all">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <Ruler className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
@@ -248,7 +248,7 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
               {/* BMI and Clinical Obesity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* BMI Card */}
-                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                <div className="glass-card-premium rounded-xl p-2.5 transition-all">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <Calculator className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
@@ -278,6 +278,7 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
                     </span>
                   </div>
 
+                  {/* Stepper row */}
                   <div className="relative flex items-center gap-1.5">
                     <button
                       type="button"
@@ -299,17 +300,19 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
                     >
                       +
                     </button>
-                    <div className="flex items-center gap-1 pl-1 shrink-0">
-                      <span className={cn('w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] animate-pulse', bmiStatus.dot)} />
-                      <span className={cn('text-[10px] font-sans font-medium', bmiStatus.color)}>
-                        {bmiStatus.label}
-                      </span>
-                    </div>
+                  </div>
+
+                  {/* BMI Status Badge — own row to prevent overflow */}
+                  <div className="flex items-center gap-1.5 mt-1.5 pl-0.5">
+                    <span className={cn('w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] animate-pulse', bmiStatus.dot)} />
+                    <span className={cn('text-[10px] font-sans font-medium', bmiStatus.color)}>
+                      {bmiStatus.label}
+                    </span>
                   </div>
                 </div>
 
                 {/* Clinical Obesity */}
-                <div className="rounded-xl border border-[rgba(145,173,221,0.24)] bg-[rgba(25,38,62,0.68)] backdrop-blur-md p-2.5 transition-all shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:border-[rgba(145,173,221,0.38)]">
+                <div className="glass-card-premium rounded-xl p-2.5 transition-all">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-[#FF3158] drop-shadow-[0_0_6px_rgba(255,49,88,0.6)]" />
@@ -922,12 +925,12 @@ export const CleanParameterPanel: React.FC<CleanParameterPanelProps> = ({
       </div>
 
       {/* Base Action: "Run Predictive Simulation" Button */}
-      <div className="p-4 border-t border-[rgba(145,173,221,0.22)] bg-[rgba(12,19,35,0.75)] backdrop-blur-md shrink-0 space-y-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+      <div className="p-4 border-t border-white/10 bg-[rgba(2,6,23,0.55)] backdrop-blur-md shrink-0 space-y-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
         <button
           type="button"
           onClick={onRunSimulation}
           disabled={isSimulating}
-          className="relative w-full h-12 rounded-xl bg-gradient-to-r from-[#FF536B] via-[#FF3158] to-[#C41838] hover:from-[#FF6B82] hover:via-[#FF4267] hover:to-[#D61E42] border border-[rgba(255,83,107,0.9)] text-[#F4F6FF] font-sans font-black text-xs uppercase tracking-wider shadow-[0_10px_35px_rgba(255,49,88,0.55),0_0_25px_rgba(255,49,88,0.45),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-2px_4px_rgba(0,0,0,0.35)] transition-all flex items-center justify-between px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden active:scale-[0.99] group"
+          className="relative w-full h-12 rounded-xl bg-gradient-to-r from-[#FF536B] via-[#FF3158] to-[#C41838] hover:from-[#FF6B82] hover:via-[#FF4267] hover:to-[#D61E42] border border-[rgba(255,83,107,0.9)] text-[#F4F6FF] font-sans font-black text-xs uppercase tracking-wider glass-simulation-button transition-all flex items-center justify-between px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden active:scale-[0.99] group"
         >
           {/* Glass Top Specular Sheen */}
           <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />

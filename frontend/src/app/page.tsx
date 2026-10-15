@@ -10,6 +10,7 @@ import { HeartCanvas3D } from '../components/HeartCanvas3D';
 import { PatientClinicalData, PredictionResult } from '../types/medical';
 import { defaultBaselinePatient, archetypePresets } from '../data/patientArchetypes';
 import { runCadMLInference } from '../utils/cadPredictor';
+import { LiquidShaderBackground } from '../components/LiquidShaderBackground';
 
 export default function Home() {
   // Step 1: Mandatory Disclaimer Modal state (defaults to open on initial load)
@@ -162,24 +163,28 @@ export default function Home() {
       {/* Main Split Layout: Floating Left Panel (~38%) and Open 3D Canvas (~62%) */}
       <main className="relative z-10 flex-1 w-full max-w-[1920px] mx-auto p-3 sm:p-5 flex flex-col lg:flex-row gap-4 sm:gap-5 items-stretch min-h-0">
         {/* LEFT FLOATING PANEL: parameter inputs OR prediction results */}
-        <section className="w-full lg:w-[38%] xl:w-[36%] flex flex-col h-[680px] lg:h-[calc(100vh-110px)] min-h-[580px]">
-          {prediction && !isSimulating ? (
-            <PredictionInlinePanel
-              prediction={prediction}
-              patient={patient}
-              onReset={handleFullReset}
-              onRunAgain={handleRunSimulation}
-              isSimulating={isSimulating}
-            />
-          ) : (
-            <CleanParameterPanel
-              patient={patient}
-              setPatient={setPatient}
-              activeTab={activeTab}
-              onRunSimulation={handleRunSimulation}
-              isSimulating={isSimulating}
-            />
-          )}
+        <section className="relative w-full lg:w-[38%] xl:w-[36%] flex flex-col h-[680px] lg:h-[calc(100vh-110px)] min-h-[580px] rounded-2xl overflow-hidden">
+          {/* Liquid Shader Background — restricted behind left panel only */}
+          <LiquidShaderBackground />
+          <div className="relative z-10 flex flex-col h-full">
+            {prediction && !isSimulating ? (
+              <PredictionInlinePanel
+                prediction={prediction}
+                patient={patient}
+                onReset={handleFullReset}
+                onRunAgain={handleRunSimulation}
+                isSimulating={isSimulating}
+              />
+            ) : (
+              <CleanParameterPanel
+                patient={patient}
+                setPatient={setPatient}
+                activeTab={activeTab}
+                onRunSimulation={handleRunSimulation}
+                isSimulating={isSimulating}
+              />
+            )}
+          </div>
         </section>
 
         {/* RIGHT OPEN CANVAS (Width: ~62%): 3D Viewer & Hemodynamic Perfusion */}

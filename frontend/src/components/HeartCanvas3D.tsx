@@ -47,10 +47,10 @@ export interface VesselData {
 
 // ─── Exact Centering & Scaling Offsets (Derived from raw GLB bounding boxes) ──
 // Torso raw bounding box: size (0.702, 0.890, 0.538), center (-0.0179, 0.1981, -0.0517)
-const TORSO_SCALE = 2.45;
+const TORSO_SCALE = 3.7;
 const TORSO_OFFSET: [number, number, number] = [
   0.01787 * TORSO_SCALE,
-  -0.19808 * TORSO_SCALE,
+  -0.19808 * TORSO_SCALE + 0.12,
   0.05174 * TORSO_SCALE,
 ];
 
@@ -435,7 +435,7 @@ function CameraAnimator({
         : viewAngle === 'lateral'
         ? { x: 3.6, y: 0.2, z: -1.6 } // Faces left lateral / posterior groove (LCX)
         : { x: -2.6, y: 0.4, z: 3.1 } // Faces right coronary sulcus (RCA)
-      : { x: 0, y: 0, z: 4.2 };
+      : { x: 0, y: 0.05, z: 4.7 };
 
     const targetLook = isPredicted
       ? viewAngle === 'anterior'
@@ -840,7 +840,7 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
 
         {/* React Three Fiber Canvas */}
         <Canvas
-          camera={{ position: [0, 0, 4.2], fov: 45, near: 0.1, far: 100 }}
+          camera={{ position: [0, 0.05, 4.7], fov: 44, near: 0.1, far: 100 }}
           gl={{
             antialias: true,
             alpha: true,
@@ -869,11 +869,11 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
 
           {/* Soft Ground Shadow */}
           <ContactShadows
-            position={[0, -1.9, 0]}
+            position={[0, -2.5, 0]}
             opacity={0.45}
-            scale={8}
+            scale={10}
             blur={2.5}
-            far={4}
+            far={5}
             color="#0ea5e9"
           />
 
@@ -904,8 +904,8 @@ export const HeartCanvas3D: React.FC<HeartCanvas3DProps> = ({
             enablePan={true}
             autoRotate={!isPredicted}
             autoRotateSpeed={0.5}
-            minDistance={1.8}
-            maxDistance={7.5}
+            minDistance={2.2}
+            maxDistance={9.0}
             minPolarAngle={Math.PI / 6}
             maxPolarAngle={Math.PI / 1.3}
             makeDefault

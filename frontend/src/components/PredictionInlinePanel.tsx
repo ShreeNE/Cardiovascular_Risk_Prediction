@@ -58,7 +58,7 @@ export const PredictionInlinePanel: React.FC<PredictionInlinePanelProps> = ({
   const catStyle = CATEGORY_STYLES[prediction.riskCategory] ?? CATEGORY_STYLES['Low Risk'];
 
   return (
-    <div className="glass-panel w-full h-full flex flex-col rounded-2xl border border-[rgba(174,198,225,0.20)] shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl overflow-hidden select-none">
+    <div className="glass-panel-premium w-full h-full flex flex-col rounded-2xl overflow-hidden select-none">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="px-5 pt-5 pb-4 border-b border-[rgba(174,198,225,0.18)] bg-[#080E18]/80 backdrop-blur-xl">
